@@ -154,9 +154,9 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
 
       <div className="main-area">
         <header className="topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {sidebarOpen && <Menu size={24} style={{ cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => setSidebarOpen(false)} />}
-            <span style={{ fontWeight: 600, fontSize: '1.05rem', letterSpacing: '0.01em' }}>{pageTitle || t('topbar.commandCenter')}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            {sidebarOpen && <Menu size={20} style={{ cursor: 'pointer', color: 'var(--text-secondary)' }} onClick={() => setSidebarOpen(false)} />}
+            <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: '1rem', letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>{pageTitle || t('topbar.commandCenter')}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {user && (
