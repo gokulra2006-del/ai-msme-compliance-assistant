@@ -306,16 +306,16 @@ tr:last-child td { border-bottom: none; }
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  font-family: inherit;
-  font-size: 0.95rem;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   letter-spacing: 0.02em;
+  text-decoration: none !important;
 }
 .btn-accent {
   background: var(--accent);
@@ -331,7 +331,7 @@ tr:last-child td { border-bottom: none; }
 
 .btn-outline {
   background: transparent;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   border: 1px solid var(--border);
 }
 .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }

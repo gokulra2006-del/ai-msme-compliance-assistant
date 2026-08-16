@@ -16,6 +16,10 @@ const ComplianceReminderSchema = new mongoose.Schema({
       'OVERDUE',          // Past deadline
       'ESCALATION',       // Role-based escalation
       'EVIDENCE_EXPIRING',// Evidence document nearing expiry
+      'EXPIRED_EVIDENCE', // Evidence document expired
+      'PENDING_REVIEW',   // Evidence/action waiting review too long
+      'REJECTED_EVIDENCE',// Evidence rejected
+      'PENDING_APPROVAL', // Action submitted for review
       'SYSTEM'            // System-generated
     ], 
     required: true 

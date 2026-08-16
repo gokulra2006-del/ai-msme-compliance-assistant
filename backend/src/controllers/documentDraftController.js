@@ -7,10 +7,42 @@ const {
   templateByKey,
   buildDraftContent
 } = require('../services/documentPreparationService');
+const { generateDocumentDraft } = require('../services/aiProvider');
+const { loadGawkContext } = require('../utils/gawkLoader');
 
 async function getUserBusiness(userId) {
   return Business.findOne({ user: userId });
 }
+
+exports.getDashboardOverview = async (req, res) => {
+  try {
+    const business = await getUserBusiness(req.user.id);
+    if (!business) return res.status(400).json({ success: false, error: 'No business profile found.' });
+
+    const drafts = await DocumentDraft.find({ business: business._id, isCurrent: true }).lean();
+    
+    // Group drafts by status
+    const draftsInProgress = drafts.filter(d => ['NOT_STARTED', 'MISSING_INFORMATION', 'GENERATED'].includes(d.documentStatus));
+    const awaitingReview = drafts.filter(d => d.documentStatus === 'UNDER_REVIEW');
+    const approvedDocuments = drafts.filter(d => d.documentStatus === 'APPROVED');
+    
+    // We also need to find obligations that might require document drafts but haven't started.
+    // For simplicity, we can return the active actions so the frontend can compare.
+    const actions = await ComplianceAction.find({ business: business._id, applicability: { $ne: 'DOES_NOT_APPLY' } }).lean();
+
+    res.json({
+      success: true,
+      data: {
+        draftsInProgress,
+        awaitingReview,
+        approvedDocuments,
+        actions
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
 
 exports.getPreparation = async (req, res) => {
   try {
@@ -76,13 +108,28 @@ exports.generateDraft = async (req, res) => {
     }
 
     const verifiedEvidence = snapshot.evidenceChecklist.filter(item => item.status === 'VERIFIED');
+
+    let draftContent = '';
+    try {
+      const gawkContext = await loadGawkContext();
+      draftContent = await generateDocumentDraft(
+        snapshot.profile.map(p => ({ label: p.label, value: p.value })),
+        snapshot.rule,
+        gawkContext,
+        template
+      );
+    } catch (err) {
+      console.error('[Draft Generator] AI fallback used due to error:', err.message);
+      draftContent = buildDraftContent({ template, snapshot });
+    }
+
     const draft = await DocumentDraft.create({
       business: business._id,
       obligationCode,
       complianceAction: snapshot.action?._id || null,
       documentType: template.label,
       templateKey,
-      content: buildDraftContent({ template, snapshot }),
+      content: draftContent,
       informationSnapshot: snapshot.profile
         .filter(item => template.requiredFields.includes(item.key) && item.value)
         .map(item => ({ key: item.key, label: item.label, value: item.value, source: item.source })),
@@ -166,6 +213,23 @@ exports.updateDraftStatus = async (req, res) => {
     }
     const { business, draft } = await findOwnedDraft(req);
     if (!draft) return res.status(404).json({ success: false, error: 'Draft not found' });
+
+    // Document Quality Check before allowing review
+    if (status === 'UNDER_REVIEW') {
+      const snapshot = await getPreparationSnapshot({ business, user: req.user, obligationCode: draft.obligationCode });
+      if (!snapshot.error) {
+        const template = templateByKey(draft.templateKey);
+        if (template) {
+          const missingInfo = template.requiredFields.filter(key => {
+            const field = snapshot.profile.find(p => p.key === key);
+            return !field || !field.value;
+          });
+          if (missingInfo.length > 0) {
+            return res.status(400).json({ success: false, error: 'CANNOT SUBMIT FOR REVIEW: Missing required business information.', missingFields: missingInfo });
+          }
+        }
+      }
+    }
 
     const previousValue = draft.toObject();
     draft.documentStatus = status;

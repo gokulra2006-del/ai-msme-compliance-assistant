@@ -189,15 +189,16 @@ const Dashboard = () => {
                 <Link to="/obligations" className="btn btn-outline btn-sm">{t('nav.obligations').replace('📋 ', '')}</Link>
                 <Link to="/evidence" className="btn btn-outline btn-sm">{t('ui.upload')}</Link>
                 <Link to="/calendar" className="btn btn-outline btn-sm">{t('ui.viewCalendar')}</Link>
-                <button className="btn btn-outline btn-sm" onClick={() => setShowRiskBreakdown(true)}>{t('ui.review')}</button>
+                <Link to="/updates/impact" className="btn btn-outline btn-sm">View Regulatory Impacts</Link>
+                <Link to="/digital-twin" className="btn btn-outline btn-sm">{t('ui.review', 'Review')}</Link>
               </div>
 
           {/* Compliance Alerts Section */}
-          {data?.alerts && (data.alerts.overdue > 0 || data.alerts.dueToday > 0 || data.alerts.dueSoon > 0 || data.alerts.escalations > 0) && (
+          {data?.alerts && (data.alerts.overdue > 0 || data.alerts.dueToday > 0 || data.alerts.dueSoon > 0 || data.alerts.escalations > 0 || data.alerts.expiredEvidence > 0 || data.alerts.pendingReview > 0 || data.alerts.rejected > 0) && (
             <div className="card mb-24" style={{ background: 'var(--bg-elevated)', borderLeft: '4px solid var(--danger)' }}>
               <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Compliance Alerts
+                Compliance Alerts & Escalations
               </h2>
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 {data.alerts.escalations > 0 && (
@@ -208,6 +209,21 @@ const Dashboard = () => {
                 {data.alerts.overdue > 0 && (
                   <Link to="/calendar" className="btn btn-outline" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
                     <span style={{ fontWeight: 700 }}>{data.alerts.overdue}</span> Overdue Actions
+                  </Link>
+                )}
+                {data.alerts.expiredEvidence > 0 && (
+                  <Link to="/evidence" className="btn btn-outline" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
+                    <span style={{ fontWeight: 700 }}>{data.alerts.expiredEvidence}</span> Expired Evidence
+                  </Link>
+                )}
+                {data.alerts.rejected > 0 && (
+                  <Link to="/evidence" className="btn btn-outline" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
+                    <span style={{ fontWeight: 700 }}>{data.alerts.rejected}</span> Rejected Items
+                  </Link>
+                )}
+                {data.alerts.pendingReview > 0 && (
+                  <Link to="/evidence" className="btn btn-outline" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderColor: 'var(--warning)', color: 'var(--warning)', background: 'rgba(245, 158, 11, 0.05)' }}>
+                    <span style={{ fontWeight: 700 }}>{data.alerts.pendingReview}</span> Pending Reviews
                   </Link>
                 )}
                 {data.alerts.dueToday > 0 && (
@@ -248,7 +264,7 @@ const Dashboard = () => {
                 'var(--border)'
               }`
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
                 <div style={{ textAlign: 'center', paddingRight: '24px', borderRight: '1px solid var(--border)' }}>
                   <h2 className="card-title micro" style={{ textTransform: 'uppercase' }}>{t('dash.complianceRisk')}</h2>
                   
@@ -310,32 +326,34 @@ const Dashboard = () => {
 
           {/* 3. Key Compliance Metrics */}
           <div className="metrics-row mb-24">
-            <div className="card metric-card">
-              <div className="card-title micro">{t('dash.applicableObligations')}</div>
-              <div className="metric-value">{data?.applies || 0}</div>
-            </div>
-            <div className="card metric-card" style={{ borderColor: data?.riskBreakdown?.critical > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{t('dash.criticalObligations')}</div>
-              <div className="metric-value" style={{ color: data?.riskBreakdown?.critical > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.riskBreakdown?.critical || 0}</div>
-            </div>
+            {user?.role !== 'ACCOUNTANT' && (
+              <div className="card metric-card">
+                <div className="card-title micro">{t('dash.applicableObligations')}</div>
+                <div className="metric-value">{data?.applies || 0}</div>
+              </div>
+            )}
+            {user?.role !== 'ACCOUNTANT' && (
+              <div className="card metric-card" style={{ borderColor: data?.riskBreakdown?.critical > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
+                <div className="card-title micro">{t('dash.criticalObligations')}</div>
+                <div className="metric-value" style={{ color: data?.riskBreakdown?.critical > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.riskBreakdown?.critical || 0}</div>
+              </div>
+            )}
             <div className="card metric-card" style={{ borderColor: data?.evidence?.summary?.missing > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{t('dash.missingEvidence')}</div>
+              <div className="card-title micro">{user?.role === 'ACCOUNTANT' ? 'Documents to Upload' : t('dash.missingEvidence')}</div>
               <div className="metric-value" style={{ color: data?.evidence?.summary?.missing > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.evidence?.summary?.missing || 0}</div>
             </div>
-            <div className="card metric-card">
-              <div className="card-title micro">{t('dash.expiringEvidence')}</div>
-              <div className="metric-value">{data?.evidence?.summary?.expiringSoon || 0}</div>
-            </div>
-            <div className="card metric-card" style={{ borderColor: data?.evidence?.summary?.expired > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{t('dash.expiredEvidence')}</div>
-              <div className="metric-value" style={{ color: data?.evidence?.summary?.expired > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.evidence?.summary?.expired || 0}</div>
-            </div>
+            {user?.role !== 'ACCOUNTANT' && (
+              <div className="card metric-card">
+                <div className="card-title micro">{t('dash.expiringEvidence')}</div>
+                <div className="metric-value">{data?.evidence?.summary?.expiringSoon || 0}</div>
+              </div>
+            )}
             <div className="card metric-card" style={{ borderColor: data?.calendar?.overdue > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{t('dash.overdueActions')}</div>
+              <div className="card-title micro">{user?.role === 'ACCOUNTANT' ? 'My Overdue Tasks' : t('dash.overdueActions')}</div>
               <div className="metric-value" style={{ color: data?.calendar?.overdue > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.calendar?.overdue || 0}</div>
             </div>
             <div className="card metric-card">
-              <div className="card-title micro">{t('dash.dueSoon')}</div>
+              <div className="card-title micro">{user?.role === 'ACCOUNTANT' ? 'My Due Soon' : t('dash.dueSoon')}</div>
               <div className="metric-value">{data?.calendar?.dueSoon || 0}</div>
             </div>
             <div className="card metric-card" style={{ borderColor: data?.calendar?.completed > 0 ? 'rgba(34, 197, 94, 0.3)' : 'var(--border)' }}>
@@ -384,6 +402,9 @@ const Dashboard = () => {
                             <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                               {action.dueDate ? `In ${daysRemaining} days` : `Frequency: ${action.frequency}`}
                             </div>
+                            {action._id && (
+                              <Link to={`/submissions/${action._id}`} className="btn btn-primary btn-sm" style={{ marginTop: '12px', padding: '4px 12px', fontSize: '0.8rem' }}>View Submission</Link>
+                            )}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                             {getSeverityBadge(action.priority)}

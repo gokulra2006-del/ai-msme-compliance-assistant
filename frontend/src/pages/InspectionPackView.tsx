@@ -46,9 +46,10 @@ const InspectionPackView = () => {
 
   if (!data) return <div style={{ color: '#000', background: '#fff', padding: 20 }}>Failed to load inspection data.</div>;
 
+  const unverifiedEvidence = data.evidenceIndex?.filter((ev: any) => ev.verificationStatus === 'UNVERIFIED' || ev.verificationStatus === 'UNDER_REVIEW') || [];
+
   return (
     <div style={{ background: '#fff', color: '#000', minHeight: '100vh', padding: '40px', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Print styles block to hide UI elements if accessed directly, ensure nice page breaks */}
       <style>
         {`
           @media print {
@@ -57,8 +58,8 @@ const InspectionPackView = () => {
             .no-print { display: none !important; }
             * { box-shadow: none !important; }
           }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+          th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; vertical-align: top; }
           th { background: #f5f5f5; font-weight: 600; }
           h1, h2, h3 { color: #111; margin-top: 24px; margin-bottom: 12px; }
           .badge-status { padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: 500; }
@@ -89,75 +90,128 @@ const InspectionPackView = () => {
         </div>
       </div>
 
-      {data.criticalGaps.length > 0 && (
+      {data.criticalGaps && data.criticalGaps.length > 0 && (
         <div style={{ marginBottom: '40px', padding: '16px', border: '1px solid #c5221f', background: '#fff' }}>
-          <h2 style={{ color: '#c5221f', marginTop: 0 }}>Critical Gaps Identified</h2>
+          <h2 style={{ color: '#c5221f', marginTop: 0 }}>High-Risk Inspection Items</h2>
           <ul style={{ margin: 0, paddingLeft: '20px' }}>
             {data.criticalGaps.map((gap: any, i: number) => (
-              <li key={i} style={{ marginBottom: '8px' }}>
+              <li key={i} style={{ marginBottom: '12px' }}>
                 <strong>{gap.issue}:</strong> {gap.obligation} {gap.docType ? `(${gap.docType})` : ''}
+                <div style={{ fontSize: '13px', color: '#555', marginTop: '4px', background: '#f5f5f5', padding: '6px', borderRadius: '4px' }}>
+                  <strong>Risk:</strong> {gap.whyDoesItMatter || gap.reason} <br/>
+                  <strong>Action Required:</strong> {gap.whatShouldIDo || 'Resolve immediately'} <br/>
+                  <strong>Regulatory Source:</strong> {gap.source || 'GAWK'}
+                </div>
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      <h2>Required Document Checklist</h2>
+      <h2>Missing Required Documents</h2>
       <table>
         <thead>
           <tr>
             <th>Document Type</th>
             <th>Related Obligation</th>
-            <th>Status</th>
-            <th>Expiry Date</th>
+            <th>Regulatory Source</th>
+            <th>Responsible</th>
           </tr>
         </thead>
         <tbody>
-          {data.documentChecklist.map((doc: any, i: number) => {
-            let badgeClass = 'badge-default';
-            if (doc.status === 'VERIFIED') badgeClass = 'badge-success';
-            if (doc.status === 'MISSING' || doc.status === 'EXPIRED') badgeClass = 'badge-danger';
-            if (doc.status === 'PENDING') badgeClass = 'badge-warning';
-
-            return (
-              <tr key={i}>
-                <td>{doc.documentType}</td>
-                <td>{doc.obligationTitle}</td>
-                <td><span className={`badge-status ${badgeClass}`}>{doc.status}</span></td>
-                <td>{doc.expiryDate ? new Date(doc.expiryDate).toLocaleDateString() : 'N/A'}</td>
-              </tr>
-            );
-          })}
-          {data.documentChecklist.length === 0 && (
-            <tr><td colSpan={4} style={{ textAlign: 'center' }}>No specific documents strictly required by current configured rules.</td></tr>
+          {data.missingDocuments && data.missingDocuments.map((doc: any, i: number) => (
+            <tr key={i}>
+              <td><span style={{ color: '#c5221f', fontWeight: 'bold' }}>{doc.documentType}</span></td>
+              <td>{doc.obligationTitle} ({doc.obligationCode})</td>
+              <td>{doc.regulatorySource ? `${doc.regulatorySource.actName} Sec ${doc.regulatorySource.section}` : 'GAWK'}</td>
+              <td>{doc.assignedTo ? doc.assignedTo.name : 'Unassigned'}</td>
+            </tr>
+          ))}
+          {(!data.missingDocuments || data.missingDocuments.length === 0) && (
+            <tr><td colSpan={4} style={{ textAlign: 'center' }}>No missing documents.</td></tr>
           )}
         </tbody>
       </table>
 
-      {(data.overdueActions.length > 0 || data.upcomingActions.length > 0) && (
+      <div className="page-break">
+        <h2>Inspection Checklist (Applicable Obligations)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rule Code</th>
+              <th>Obligation</th>
+              <th>Severity</th>
+              <th>Submission Status</th>
+              <th>Regulatory Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.checklist && data.checklist.map((item: any, i: number) => (
+              <tr key={i}>
+                <td>{item.ruleCode}</td>
+                <td>{item.obligationName}</td>
+                <td>{item.severity}</td>
+                <td>{item.submissionStatus.replace(/_/g, ' ')}</td>
+                <td>{item.regulatorySource?.actName || 'N/A'}</td>
+              </tr>
+            ))}
+            {(!data.checklist || data.checklist.length === 0) && (
+              <tr><td colSpan={5} style={{ textAlign: 'center' }}>No applicable obligations found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="page-break">
+        <h2>Evidence Index</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Document Name</th>
+              <th>Type</th>
+              <th>Obligation</th>
+              <th>Verification Status</th>
+              <th>Expiry Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.evidenceIndex && data.evidenceIndex.map((ev: any, i: number) => (
+              <tr key={i}>
+                <td>{ev.name}</td>
+                <td>{ev.type}</td>
+                <td>{ev.obligationCode}</td>
+                <td>{ev.verificationStatus}</td>
+                <td style={{ color: ev.verificationStatus === 'EXPIRED' ? '#c5221f' : 'inherit' }}>
+                  {ev.expiryDate ? new Date(ev.expiryDate).toLocaleDateString() : 'N/A'}
+                </td>
+              </tr>
+            ))}
+            {(!data.evidenceIndex || data.evidenceIndex.length === 0) && (
+              <tr><td colSpan={5} style={{ textAlign: 'center' }}>No evidence uploaded.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {unverifiedEvidence.length > 0 && (
         <div className="page-break">
-          <h2>Pending Compliance Actions</h2>
+          <h2>Evidence Requiring Human Review</h2>
           <table>
             <thead>
               <tr>
-                <th>Action Title</th>
-                <th>Due Date</th>
-                <th>Status</th>
+                <th>Document Name</th>
+                <th>Type</th>
+                <th>Obligation</th>
+                <th>Uploaded By</th>
               </tr>
             </thead>
             <tbody>
-              {data.overdueActions.map((action: any, i: number) => (
-                <tr key={`od-${i}`}>
-                  <td>{action.title}</td>
-                  <td style={{ color: '#c5221f', fontWeight: 'bold' }}>{new Date(action.dueDate).toLocaleDateString()}</td>
-                  <td><span className="badge-status badge-danger">OVERDUE</span></td>
-                </tr>
-              ))}
-              {data.upcomingActions.map((action: any, i: number) => (
-                <tr key={`up-${i}`}>
-                  <td>{action.title}</td>
-                  <td>{new Date(action.dueDate).toLocaleDateString()}</td>
-                  <td><span className="badge-status badge-default">PENDING</span></td>
+              {unverifiedEvidence.map((ev: any, i: number) => (
+                <tr key={i}>
+                  <td>{ev.name}</td>
+                  <td>{ev.type}</td>
+                  <td>{ev.obligationCode}</td>
+                  <td>{ev.responsibleUser}</td>
                 </tr>
               ))}
             </tbody>
@@ -165,7 +219,41 @@ const InspectionPackView = () => {
         </div>
       )}
 
-      {data.recentUpdates.length > 0 && (
+      {(data.overdueActions?.length > 0 || data.upcomingActions?.length > 0) && (
+        <div className="page-break">
+          <h2>Open Corrective Actions</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Action Title</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Responsible</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.overdueActions?.map((action: any, i: number) => (
+                <tr key={`od-${i}`}>
+                  <td>{action.title}</td>
+                  <td style={{ color: '#c5221f', fontWeight: 'bold' }}>{new Date(action.dueDate).toLocaleDateString()}</td>
+                  <td><span className="badge-status badge-danger">OVERDUE</span></td>
+                  <td>{action.assignedTo?.name || 'Unassigned'}</td>
+                </tr>
+              ))}
+              {data.upcomingActions?.map((action: any, i: number) => (
+                <tr key={`up-${i}`}>
+                  <td>{action.title}</td>
+                  <td>{new Date(action.dueDate).toLocaleDateString()}</td>
+                  <td><span className="badge-status badge-default">PENDING</span></td>
+                  <td>{action.assignedTo?.name || 'Unassigned'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {data.recentUpdates && data.recentUpdates.length > 0 && (
         <div className="page-break">
           <h2>Recent Regulatory Changes</h2>
           {data.recentUpdates.map((update: any, i: number) => (

@@ -265,13 +265,19 @@ function evaluateRules(businessProfile, rulesFromDb = []) {
     }
     const explanation = generateExplanation(evalResult.status, rule.title, evalResult, businessProfile);
     
-    const regulatorStr = rule.regulator || 'Authority';
-    const mockSource = {
-      sourceName: rule.regulatorySource || 'Official Gazette',
-      actName: `${regulatorStr} Act`,
-      sectionNumber: `Section ${Math.floor(Math.random() * 100) + 1}`,
-      officialUrl: `https://example.gov.in/${regulatorStr.toLowerCase()}`,
-      lastVerifiedDate: new Date().toISOString()
+    const sourceData = rule.regulatorySource && typeof rule.regulatorySource === 'object' 
+      ? rule.regulatorySource 
+      : rule; // Fall back to rule object properties if not populated
+      
+    const realSource = {
+      sourceName: sourceData.sourceName || 'NOT AVAILABLE IN GAWK',
+      actName: sourceData.actName || 'NOT AVAILABLE IN GAWK',
+      sectionNumber: sourceData.sectionNumber || sourceData.section || 'NOT AVAILABLE IN GAWK',
+      authority: sourceData.authority || sourceData.regulator || 'NOT AVAILABLE IN GAWK',
+      officialUrl: sourceData.officialUrl || sourceData.sourceUrl || 'NOT AVAILABLE IN GAWK',
+      effectiveDate: sourceData.effectiveDate || sourceData.effectiveFrom || null,
+      lastVerifiedDate: sourceData.lastVerifiedDate || new Date().toISOString(),
+      verificationStatus: sourceData.verificationStatus || 'PENDING_REVIEW'
     };
 
     results.push({
@@ -293,7 +299,7 @@ function evaluateRules(businessProfile, rulesFromDb = []) {
       conditionsMatched: evalResult.conditionsMatched,
       conditionsNotMatched: evalResult.conditionsNotMatched,
       missingFields: evalResult.missingFields,
-      regulatorySource: mockSource,
+      regulatorySource: realSource,
       recommendedNextAction: getRecommendedAction(rule),
       
       // legacy fields for compatibility with existing UI temporarily

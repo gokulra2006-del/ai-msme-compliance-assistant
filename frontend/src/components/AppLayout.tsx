@@ -1,6 +1,6 @@
 import { useState, useEffect, ReactNode, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, LayoutDashboard, Bot, Calendar, ClipboardList, FolderLock, Settings, Users, Building2, ScrollText, LogOut, ShieldCheck, Bell, Circle, FilePenLine } from 'lucide-react';
+import { Menu, LayoutDashboard, Bot, Calendar, ClipboardList, FolderLock, Settings, Users, Building2, ScrollText, LogOut, ShieldCheck, Bell, Circle, FilePenLine, Beaker, Database } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSelector from './LanguageSelector';
@@ -25,6 +25,9 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+
 
   useEffect(() => {
     localStorage.setItem('sidebarOpen', sidebarOpen.toString());
@@ -88,7 +91,7 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
   return (
     <div className={`app-shell ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       <aside className="sidebar">
-        <div className="sidebar-brand">
+        <div className="sidebar-brand" onClick={() => setSidebarOpen(true)} style={{ cursor: 'pointer' }}>
           <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: '28px', height: '28px' }}>
             <img src="/logo.svg" alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
@@ -102,6 +105,7 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
           {user?.role === 'ADMIN' && (
             <>
               <Link to="/users" className={`nav-link ${location.pathname === '/users' ? 'active' : ''}`}><Users size={18} /> <span>Users</span></Link>
+              <Link to="/simulator" className={`nav-link ${location.pathname === '/simulator' ? 'active' : ''}`}><Beaker size={18} /> <span>Admin Simulator</span></Link>
               <Link to="/businesses" className={`nav-link ${location.pathname === '/businesses' ? 'active' : ''}`}><Building2 size={18} /> <span>Businesses</span></Link>
               <Link to="/audit-logs" className={`nav-link ${location.pathname === '/audit-logs' ? 'active' : ''}`}><ScrollText size={18} /> <span>Audit Logs</span></Link>
               <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>Inspection Readiness</span></Link>
@@ -128,9 +132,11 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
 
           {(user?.role === 'OWNER' || !user?.role) && (
             <>
+              <Link to="/digital-twin" className={`nav-link ${location.pathname === '/digital-twin' ? 'active' : ''}`}><Database size={18} /> <span>Digital Twin</span></Link>
               <Link to="/calendar" className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}><Calendar size={18} /> <span>{t('nav.calendar', 'Calendar')}</span></Link>
               <Link to="/obligations" className={`nav-link ${location.pathname === '/obligations' ? 'active' : ''}`}><ClipboardList size={18} /> <span>{t('nav.obligations', 'Obligations')}</span></Link>
               <Link to="/evidence" className={`nav-link ${location.pathname === '/evidence' ? 'active' : ''}`}><FolderLock size={18} /> <span>{t('nav.evidence', 'Evidence Vault')}</span></Link>
+              <Link to="/simulator" className={`nav-link ${location.pathname === '/simulator' ? 'active' : ''}`}><Beaker size={18} /> <span>Simulator</span></Link>
               <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>Inspection Readiness</span></Link>
               <Link to="/onboarding" className={`nav-link ${location.pathname === '/onboarding' ? 'active' : ''}`}><Settings size={18} /> <span>{t('nav.editProfile', 'Edit Profile')}</span></Link>
             </>
@@ -149,8 +155,8 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
       <div className="main-area">
         <header className="topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <Menu size={24} style={{ cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => setSidebarOpen(!sidebarOpen)} />
-            <span style={{ fontWeight: 600 }}>{pageTitle || t('topbar.commandCenter')}</span>
+            {sidebarOpen && <Menu size={24} style={{ cursor: 'pointer', color: 'var(--text-primary)' }} onClick={() => setSidebarOpen(false)} />}
+            <span style={{ fontWeight: 600, fontSize: '1.05rem', letterSpacing: '0.01em' }}>{pageTitle || t('topbar.commandCenter')}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {user && (
@@ -223,9 +229,57 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
               </div>
             )}
             <LanguageSelector />
-            <div className="topbar-user">
+            <div className="topbar-user" style={{ position: 'relative' }}>
               {userData?.industry && <span>{userData.industry} • {userData.state}</span>}
-              <div className="avatar">{user?.name?.[0] || 'U'}</div>
+              <div 
+                className="avatar" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                {user?.name?.[0] || 'U'}
+              </div>
+              
+              {showUserMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: 40,
+                  right: 0,
+                  background: 'var(--bg-primary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                  zIndex: 100,
+                  minWidth: '150px',
+                  padding: '8px'
+                }}>
+                  <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                    Signed in as<br />
+                    <strong style={{ color: 'var(--text-primary)' }}>{user?.name || user?.email}</strong>
+                  </div>
+                  <button 
+                    onClick={() => { setShowUserMenu(false); logout(); navigate('/login'); }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '8px 12px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--danger)',
+                      cursor: 'pointer',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '14px',
+                      fontWeight: 500
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <LogOut size={16} /> {t('nav.signOut', 'Sign Out')}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

@@ -1,6 +1,12 @@
 const ComplianceAction = require('../models/ComplianceAction');
 const ComplianceRule = require('../models/ComplianceRule');
 const Evidence = require('../models/Evidence');
+const {
+  getExpiryStatus,
+  indexEvidenceForMatching,
+  findEvidenceForRequirement,
+  resolveRequiredEvidenceState
+} = require('../utils/evidenceStatus');
 
 // Weights Config
 const WEIGHTS = {
@@ -13,7 +19,12 @@ const WEIGHTS = {
   EXPIRED_EVIDENCE: 20,
   DUE_SOON_ACTION: 5,
   EXPIRING_SOON_EVIDENCE: 5,
-  INSUFFICIENT_DATA: 5
+  INSUFFICIENT_DATA: 5,
+  // A document that exists but has not been accepted by a reviewer is a smaller
+  // risk than a missing one, but it is not the same as being satisfied.
+  UNVERIFIED_EVIDENCE: 5,
+  // A critical obligation with no evidence on file at all.
+  CRITICAL_OBLIGATION_NO_EVIDENCE: 10
 };
 
 /**
@@ -38,8 +49,17 @@ async function calculateRiskScore(businessId) {
   let missingEvidenceCount = 0;
   let expiredEvidenceCount = 0;
   let insufficientDataCount = 0;
+  let unverifiedEvidenceCount = 0;
+  let criticalWithoutEvidenceCount = 0;
 
   const now = new Date();
+
+  // Superseded and archived documents are excluded from every evidence check
+  // below, so a replaced or archived file can never satisfy — or inflate the risk
+  // of — a current requirement. The same helper the Evidence Vault uses is
+  // applied here, so the two can never disagree about a document's state.
+  const evidenceIndex = indexEvidenceForMatching(evidences);
+  const activeEvidence = evidenceIndex.active;
 
   // 1. Analyze Compliance Actions and Obligations
   for (const action of actions) {
@@ -47,7 +67,7 @@ async function calculateRiskScore(businessId) {
       insufficientDataCount++;
       continue; // Skip further evaluation for insufficient data
     }
-    
+
     if (action.applicability !== 'APPLIES') continue;
 
     // Severity
@@ -80,36 +100,56 @@ async function calculateRiskScore(businessId) {
       }
     }
 
-    // Missing Evidence Check
-    // If the action requires evidence, check if they exist and are verified
+    // Required Evidence Check.
+    // The list of required documents comes only from the GAWK-derived record the
+    // Rules Engine produced — nothing here invents a document requirement.
     if (action.evidenceRequired && action.evidenceRequired.length > 0) {
+      let obligationHasAnyEvidence = false;
+
       for (const requiredType of action.evidenceRequired) {
-        // Find matching evidence for this obligation/type
-        const hasEvidence = evidences.find(e => e.obligationCode === action.ruleCode && e.documentType === requiredType);
-        
-        if (!hasEvidence || hasEvidence.verificationStatus === 'REJECTED') {
+        const match = findEvidenceForRequirement(evidenceIndex, action.ruleCode, requiredType, now);
+        // A document filed under a different obligation is not counted here — the
+        // Evidence Vault offers it as a suggestion for a human to link instead.
+        const state = match.matchType === 'EXACT'
+          ? resolveRequiredEvidenceState(match.evidence, now)
+          : 'MISSING';
+
+        if (state === 'MISSING' || state === 'REJECTED') {
           missingEvidenceCount++;
           recommendedActions.push(`Upload missing document: ${requiredType} for ${action.title}`);
+        } else if (state === 'EXPIRED') {
+          // Counted once in the expiry pass below so it is not double-charged.
+          obligationHasAnyEvidence = true;
+        } else if (state === 'UNVERIFIED' || state === 'UNDER_REVIEW') {
+          unverifiedEvidenceCount++;
+          obligationHasAnyEvidence = true;
+          recommendedActions.push(`Get ${requiredType} reviewed for ${action.title}`);
+        } else {
+          obligationHasAnyEvidence = true;
         }
+      }
+
+      if (action.priority === 'CRITICAL' && !obligationHasAnyEvidence) {
+        criticalWithoutEvidenceCount++;
+        drivers.push(`Critical obligation with no evidence on file: ${action.title}`);
       }
     }
   }
 
-  // 2. Analyze Existing Evidence (Expired / Expiring Soon)
-  for (const ev of evidences) {
-    if (ev.expiryDate) {
-      const exp = new Date(ev.expiryDate);
-      if (exp < now) {
-        expiredEvidenceCount++;
-        recommendedActions.push(`Renew expired document: ${ev.documentName}`);
-      } else {
-        const diffDays = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays <= 30) {
-          rawScore += WEIGHTS.EXPIRING_SOON_EVIDENCE;
-          drivers.push(`Document expiring soon: ${ev.documentName}`);
-          recommendedActions.push(`Prepare renewal for: ${ev.documentName}`);
-        }
-      }
+  // 2. Analyze Existing Evidence (Expired / Expiring Soon).
+  // Expiry is only read from a date stored on the record. A document with no
+  // detected expiry date is never assumed to be permanently valid, and is never
+  // counted as expired either.
+  for (const ev of activeEvidence) {
+    if (ev.verificationStatus === 'REJECTED') continue;
+    const expiryStatus = getExpiryStatus(ev.expiryDate, now);
+    if (expiryStatus === 'EXPIRED') {
+      expiredEvidenceCount++;
+      recommendedActions.push(`Renew expired document: ${ev.documentName}`);
+    } else if (expiryStatus === 'EXPIRING_SOON') {
+      rawScore += WEIGHTS.EXPIRING_SOON_EVIDENCE;
+      drivers.push(`Document expiring soon: ${ev.documentName}`);
+      recommendedActions.push(`Prepare renewal for: ${ev.documentName}`);
     }
   }
 
@@ -173,6 +213,29 @@ async function calculateRiskScore(businessId) {
     drivers.push(`${expiredEvidenceCount} expired document(s)`);
   }
 
+  if (unverifiedEvidenceCount > 0) {
+    const contribution = unverifiedEvidenceCount * WEIGHTS.UNVERIFIED_EVIDENCE;
+    rawScore += contribution;
+    factors.push({
+      factor: 'UNVERIFIED_EVIDENCE',
+      count: unverifiedEvidenceCount,
+      contribution,
+      explanation: `${unverifiedEvidenceCount} required document(s) are uploaded but have not been accepted by a reviewer inside SurakshaSetu.`
+    });
+    drivers.push(`${unverifiedEvidenceCount} document(s) awaiting internal review`);
+  }
+
+  if (criticalWithoutEvidenceCount > 0) {
+    const contribution = criticalWithoutEvidenceCount * WEIGHTS.CRITICAL_OBLIGATION_NO_EVIDENCE;
+    rawScore += contribution;
+    factors.push({
+      factor: 'CRITICAL_OBLIGATION_NO_EVIDENCE',
+      count: criticalWithoutEvidenceCount,
+      contribution,
+      explanation: `${criticalWithoutEvidenceCount} critical obligation(s) have no supporting document on file at all.`
+    });
+  }
+
   if (insufficientDataCount > 0) {
     const contribution = insufficientDataCount * WEIGHTS.INSUFFICIENT_DATA;
     rawScore += contribution;
@@ -207,8 +270,8 @@ async function calculateRiskScore(businessId) {
   const topDrivers = [...new Set(drivers)].slice(0, 5);
 
   const breakdown = {
-    operations: Math.min(100, Math.round((missingEvidenceCount * 20) + (expiredEvidenceCount * 20))),
-    legal: Math.min(100, Math.round((criticalObligationsCount * 20) + (insufficientDataCount * 5))),
+    operations: Math.min(100, Math.round((missingEvidenceCount * 20) + (expiredEvidenceCount * 20) + (unverifiedEvidenceCount * 5))),
+    legal: Math.min(100, Math.round((criticalObligationsCount * 20) + (insufficientDataCount * 5) + (criticalWithoutEvidenceCount * 10))),
     financial: Math.min(100, Math.round((overdueActionsCount * 25) + (dueSoonActionsCount * 5)))
   };
 

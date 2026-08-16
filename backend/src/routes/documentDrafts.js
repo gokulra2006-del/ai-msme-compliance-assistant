@@ -5,6 +5,7 @@ const controller = require('../controllers/documentDraftController');
 const router = express.Router();
 router.use(protect);
 
+router.get('/dashboard', controller.getDashboardOverview);
 router.get('/preparation/:obligationCode', controller.getPreparation);
 router.get('/', controller.listDrafts);
 router.post('/', controller.generateDraft);

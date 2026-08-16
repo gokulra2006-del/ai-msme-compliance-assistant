@@ -5,7 +5,7 @@ const Business = require('../models/Business');
 
 exports.chat = async (req, res) => {
   try {
-    const { question, language } = req.body;
+    const { question, language, simulationId } = req.body;
     if (!question) {
       return res.status(400).json({ success: false, error: 'Question is required' });
     }
@@ -14,7 +14,7 @@ exports.chat = async (req, res) => {
     if (!business) {
       return res.status(404).json({ success: false, error: 'Business profile not found' });
     }
-    const context = await buildContext(business._id, question);
+    const context = await buildContext(business._id, question, simulationId);
     if (!context) {
       return res.status(404).json({ success: false, error: 'Business profile not found' });
     }
@@ -38,7 +38,7 @@ exports.chat = async (req, res) => {
     console.error('Assistant Chat Error:', err.message);
     res.status(500).json({ 
       success: false, 
-      error: 'The compliance assistant is temporarily unavailable. You can still use your compliance dashboard, obligations and calendar.' 
+      error: err.message || 'The compliance assistant is temporarily unavailable.' 
     });
   }
 };

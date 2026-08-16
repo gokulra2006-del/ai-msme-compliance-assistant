@@ -4,6 +4,7 @@ const ComplianceRule = require('../models/ComplianceRule');
 const Evidence = require('../models/Evidence');
 const { evaluateRules } = require('../engine/rulesEngine');
 const { logAudit } = require('../utils/auditLogger');
+const EvidenceIntelligence = require('../services/evidenceIntelligenceService');
 
 // Helper to calculate dynamic status
 const calculateStatus = (action) => {
@@ -30,15 +31,8 @@ const calculateStatus = (action) => {
 
 exports.syncActions = async (req, res) => {
   try {
-    const businessId = req.user.businessId || req.body.businessId;
-    if (!businessId) {
-       // if user has no business, return early
-       const business = await Business.findOne({ user: req.user.id });
-       if (!business) return res.status(200).json({ success: true, message: 'No business found' });
-    }
-    
-    const business = await Business.findOne({ _id: businessId || (await Business.findOne({ user: req.user.id }))._id });
-    if (!business) return res.status(404).json({ success: false, error: 'Business not found' });
+    const business = await EvidenceIntelligence.resolveBusinessForUser(req.user);
+    if (!business) return res.status(200).json({ success: true, message: 'No business found' });
 
     // 1. Sync from Rules Engine
     const allRules = await ComplianceRule.find({ active: true });
@@ -72,10 +66,18 @@ exports.syncActions = async (req, res) => {
       }
     }
 
-    // 2. Sync from Evidence Expiries
-    const expiringEvidences = await Evidence.find({ 
-      business: business._id, 
-      expiryDate: { $ne: null } 
+    // 2. Sync from Evidence Expiries.
+    // These rows are what puts document renewals on the EXISTING Compliance
+    // Calendar — no separate calendar is created. Only the current, non-archived
+    // version of a document produces a renewal entry, and the due date is the
+    // expiry date already recorded on the document. No expiry period is invented:
+    // a document with no expiry date on record produces no calendar entry.
+    const expiringEvidences = await Evidence.find({
+      business: business._id,
+      expiryDate: { $ne: null },
+      isLatestVersion: { $ne: false },
+      archived: { $ne: true },
+      verificationStatus: { $nin: ['ARCHIVED', 'REJECTED'] }
     });
 
     for (const ev of expiringEvidences) {
@@ -84,7 +86,7 @@ exports.syncActions = async (req, res) => {
         {
           $set: {
             title: `Renew: ${ev.documentName}`,
-            description: `Evidence document "${ev.documentName}" is expiring.`,
+            description: `Evidence document "${ev.documentName}" is expiring on the date recorded on the document.`,
             category: 'Evidence Renewal',
             dueDate: ev.expiryDate,
             priority: 'HIGH',
@@ -149,10 +151,14 @@ exports.getDashboardSummary = async (req, res) => {
     const business = await Business.findOne({ user: req.user.id });
     if (!business) return res.status(200).json({ success: true, data: null });
 
-    const actions = await ComplianceAction.find({ 
-      business: business._id, 
-      applicability: { $in: ['APPLIES', 'INSUFFICIENT_DATA'] } 
-    }).lean();
+    let filter = { business: business._id, applicability: { $in: ['APPLIES', 'INSUFFICIENT_DATA'] } };
+    
+    // Role-based filtering for ACCOUNTANT
+    if (req.user.role === 'ACCOUNTANT') {
+      filter.assignedTo = req.user.id;
+    }
+
+    const actions = await ComplianceAction.find(filter).lean();
 
     let overdue = 0, dueSoon = 0, onTrack = 0, completed = 0, pending = 0;
     

@@ -15,10 +15,18 @@ const RegulatoryUpdateSchema = new mongoose.Schema({
   
   proposedChanges: { type: String },
   
+  changeType: {
+    type: String,
+    enum: ['NEW_RULE', 'AMENDED_RULE', 'REPEALED_RULE', 'THRESHOLD_CHANGED', 'DEADLINE_CHANGED', 'DOCUMENT_CHANGED', 'REGISTRATION_CHANGED', 'PENALTY_CHANGED', 'FREQUENCY_CHANGED', 'APPLICABILITY_CHANGED', 'OTHER'],
+    default: 'OTHER'
+  },
+  oldRequirement: { type: mongoose.Schema.Types.Mixed },
+  newRequirement: { type: mongoose.Schema.Types.Mixed },
+  
   status: { 
     type: String, 
-    enum: ['RECEIVED', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'PUBLISHED'],
-    default: 'RECEIVED'
+    enum: ['DRAFT', 'UNDER_REVIEW', 'VERIFIED', 'APPROVED', 'EFFECTIVE', 'REJECTED', 'SUPERSEDED', 'ARCHIVED'],
+    default: 'DRAFT'
   },
   
   submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

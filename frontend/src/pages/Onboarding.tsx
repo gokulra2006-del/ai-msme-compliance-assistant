@@ -388,15 +388,15 @@ const Onboarding = () => {
               <div className="grid-2">
                 <div className="form-group">
                   <label className="form-label">{t('form.totalWorkers', 'Total Workers')}</label>
-                  <input type="number" className="form-input" value={form.totalWorkers} onChange={e => update('totalWorkers', parseInt(e.target.value) || 0)} min="0" />
+                  <input type="number" className="form-input" value={form.totalWorkers} onChange={e => update('totalWorkers', e.target.value === '' ? '' : Number(e.target.value))} min="0" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">{t('form.contractWorkers', 'Contract Workers')}</label>
-                  <input type="number" className="form-input" value={form.contractWorkers} onChange={e => update('contractWorkers', parseInt(e.target.value) || 0)} min="0" />
+                  <input type="number" className="form-input" value={form.contractWorkers} onChange={e => update('contractWorkers', e.target.value === '' ? '' : Number(e.target.value))} min="0" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">{t('form.womenWorkers', 'Women Workers')}</label>
-                  <input type="number" className="form-input" value={form.womenWorkers} onChange={e => update('womenWorkers', parseInt(e.target.value) || 0)} min="0" />
+                  <input type="number" className="form-input" value={form.womenWorkers} onChange={e => update('womenWorkers', e.target.value === '' ? '' : Number(e.target.value))} min="0" />
                 </div>
                 {renderTriStateSelect(t('form.nightShift', 'Night Shift Operations?'), 'nightShift')}
               </div>

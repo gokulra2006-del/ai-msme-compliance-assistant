@@ -245,17 +245,31 @@ const Obligations = () => {
             </div>
 
             <div className="card" style={{ marginBottom: '24px', padding: '24px 32px', background: 'rgba(255,255,255,0.015)' }}>
-              <div className="card-title micro">Regulatory Source</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div className="card-title micro" style={{ margin: 0 }}>Regulatory Source</div>
+                {selected.regulatorySource && selected.regulatorySource.verificationStatus === 'VERIFIED' && (
+                  <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>✓ GAWK Verified</span>
+                )}
+              </div>
+              
               {selected.regulatorySource ? (
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'grid', gap: '8px' }}>
                   <div><strong>Source:</strong> {selected.regulatorySource.sourceName}</div>
                   <div><strong>Act/Regulation:</strong> {selected.regulatorySource.actName}</div>
                   <div><strong>Section:</strong> {selected.regulatorySource.sectionNumber}</div>
-                  <div style={{ marginTop: '4px' }}>
-                    <a href={selected.regulatorySource.officialUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-light)' }}>
-                      View Official Source ↗
-                    </a>
-                  </div>
+                  <div><strong>Authority:</strong> {selected.regulatorySource.authority || selected.authority || selected.regulator}</div>
+                  {selected.regulatorySource.officialUrl && selected.regulatorySource.officialUrl !== 'NOT AVAILABLE IN GAWK' && (
+                    <div style={{ marginTop: '4px' }}>
+                      <a href={selected.regulatorySource.officialUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-light)' }}>
+                        View Official Source ↗
+                      </a>
+                    </div>
+                  )}
+                  {selected.regulatorySource.officialUrl === 'NOT AVAILABLE IN GAWK' && (
+                    <div style={{ marginTop: '4px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
+                      Source URL not available in the GAWK ruleset.
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Source verification information is not available.</div>

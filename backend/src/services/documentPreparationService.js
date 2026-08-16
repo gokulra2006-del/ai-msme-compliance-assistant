@@ -1,6 +1,6 @@
 const ComplianceAction = require('../models/ComplianceAction');
 const ComplianceRule = require('../models/ComplianceRule');
-const Evidence = require('../models/Evidence');
+const EvidenceIntelligence = require('./evidenceIntelligenceService');
 
 // These are intentionally non-official internal preparation templates. The
 // project does not contain verified government form files, so it must not
@@ -60,38 +60,38 @@ function getProfileSnapshot(business, user) {
   }));
 }
 
-function normalise(value) {
-  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
 async function findRule(ruleCode) {
   return ComplianceRule.findOne({
     ruleCode,
     status: { $nin: ['INACTIVE', 'EXPIRED', 'ARCHIVED'] }
-  }).lean();
+  }).populate('regulatorySource').lean();
 }
 
 async function getPreparationSnapshot({ business, user, obligationCode }) {
   const rule = await findRule(obligationCode);
   if (!rule) return { error: 'Applicable obligation not found.' };
 
-  const [action, evidence] = await Promise.all([
+  // The evidence checklist is read from the shared Evidence Intelligence service
+  // so Document Preparation reports exactly the same status as the Evidence
+  // Vault. Requirements come only from the GAWK-derived rule/action records.
+  const [action, evidenceStatus] = await Promise.all([
     ComplianceAction.findOne({ business: business._id, ruleCode: obligationCode }).lean(),
-    Evidence.find({ business: business._id, verificationStatus: 'VERIFIED', isLatestVersion: true }).lean()
+    EvidenceIntelligence.getObligationEvidenceStatus({ business, obligationCode })
   ]);
 
   const profile = getProfileSnapshot(business, user);
   const profileByKey = Object.fromEntries(profile.map(item => [item.key, item]));
-  const requiredEvidence = rule.requiredEvidence || [];
-  const evidenceChecklist = requiredEvidence.map(documentType => {
-    const match = evidence.find(item => normalise(item.documentType) === normalise(documentType));
-    return {
-      documentType,
-      status: match ? 'VERIFIED' : 'MISSING',
-      evidenceId: match?._id || null,
-      documentName: match?.documentName || null
-    };
-  });
+  const evidenceChecklist = evidenceStatus.checklist.map(row => ({
+    documentType: row.documentType,
+    status: row.status,
+    satisfied: row.satisfied,
+    evidenceId: row.evidenceId,
+    documentName: row.evidence?.documentName || null,
+    expiryDate: row.expiryDate,
+    expiryStatus: row.expiryStatus,
+    suggestedEvidence: row.suggestedEvidence,
+    traceability: row.traceability
+  }));
 
   const templates = DRAFT_TEMPLATES.map(template => {
     const missingInformation = template.requiredFields
@@ -109,6 +109,18 @@ async function getPreparationSnapshot({ business, user, obligationCode }) {
     action,
     profile,
     evidenceChecklist,
+    evidenceGaps: {
+      missing: evidenceStatus.missing,
+      expired: evidenceStatus.expired,
+      unverified: evidenceStatus.unverified,
+      rejected: evidenceStatus.rejected
+    },
+    // An obligation with no recorded required evidence is reported as such
+    // rather than presented as satisfied.
+    hasEvidenceRequirements: evidenceStatus.hasRequirements,
+    noEvidenceRequirementNotice: evidenceStatus.noRequirementNotice,
+    evidenceTraceability: evidenceStatus.traceability,
+    verificationMeaning: EvidenceIntelligence.VERIFICATION_MEANING,
     templates,
     officialTemplateAvailable: false,
     officialTemplateNotice: 'Official form/template not available in the verified source database.'
@@ -122,7 +134,11 @@ function templateByKey(key) {
 function buildDraftContent({ template, snapshot }) {
   const profileByKey = Object.fromEntries(snapshot.profile.map(item => [item.key, item]));
   const line = key => `${profileByKey[key].label}: ${profileByKey[key].value}`;
-  const verifiedEvidence = snapshot.evidenceChecklist.filter(item => item.status === 'VERIFIED');
+  // Only documents an authorised reviewer has accepted are listed as supporting
+  // evidence. Anything else is listed as an outstanding item so the draft never
+  // implies a gap has been closed.
+  const acceptedEvidence = snapshot.evidenceChecklist.filter(item => item.satisfied);
+  const outstandingEvidence = snapshot.evidenceChecklist.filter(item => !item.satisfied);
   const rule = snapshot.rule;
 
   const shared = [
@@ -141,10 +157,18 @@ function buildDraftContent({ template, snapshot }) {
     'AVAILABLE BUSINESS INFORMATION',
     ...template.requiredFields.map(line),
     '',
-    'VERIFIED SUPPORTING EVIDENCE',
-    ...(verifiedEvidence.length
-      ? verifiedEvidence.map(item => `- ${item.documentType}: ${item.documentName}`)
-      : ['- No verified supporting evidence is currently linked.']),
+    'SUPPORTING EVIDENCE ACCEPTED IN SURAKSHASETU',
+    '(Reviewed and accepted internally. This is not independent government verification.)',
+    ...(acceptedEvidence.length
+      ? acceptedEvidence.map(item => `- ${item.documentType}: ${item.documentName}`)
+      : ['- No accepted supporting evidence is currently linked.']),
+    '',
+    'OUTSTANDING SUPPORTING EVIDENCE',
+    ...(snapshot.hasEvidenceRequirements === false
+      ? [`- ${snapshot.noEvidenceRequirementNotice}`]
+      : outstandingEvidence.length
+        ? outstandingEvidence.map(item => `- ${item.documentType}: ${item.status}`)
+        : ['- None outstanding.']),
     '',
     'PREPARATION NOTES',
   ];
@@ -172,6 +196,22 @@ function buildDraftContent({ template, snapshot }) {
       '1. Confirm every factual statement against the source record.',
       '2. Complete any official form directly from its verified source, if one is required.',
       '3. Obtain authorised internal review before using this draft.'
+    );
+  }
+
+  shared.push('');
+  if (rule.regulatorySource) {
+    shared.push(
+      'REGULATORY BASIS',
+      `Act: ${rule.regulatorySource.actName || 'MISSING INFORMATION'}`,
+      `Rule/Section: ${rule.regulatorySource.sectionNumber || 'MISSING INFORMATION'}`,
+      `Authority: ${rule.regulatorySource.authority || 'MISSING INFORMATION'}`,
+      `Source: ${rule.regulatorySource.officialUrl || 'SOURCE INFORMATION UNAVAILABLE IN GAWK.'}`
+    );
+  } else {
+    shared.push(
+      'REGULATORY BASIS',
+      'SOURCE INFORMATION UNAVAILABLE IN GAWK.'
     );
   }
 

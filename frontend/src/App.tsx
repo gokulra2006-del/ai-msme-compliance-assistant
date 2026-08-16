@@ -9,6 +9,7 @@ import Assistant from './pages/Assistant';
 import Onboarding from './pages/Onboarding';
 import Obligations from './pages/Obligations';
 import EvidenceVault from './pages/EvidenceVault';
+import ErrorBoundary from './components/ErrorBoundary';
 import ComplianceCalendar from './pages/ComplianceCalendar';
 import AuditLogs from './pages/AuditLogs';
 import AdminRoute from './components/AdminRoute';
@@ -21,6 +22,10 @@ import InspectionReadiness from './pages/InspectionReadiness';
 import InspectionPackView from './pages/InspectionPackView';
 import SubmissionGuide from './pages/SubmissionGuide';
 import DocumentPreparation from './pages/DocumentPreparation';
+import RegulatorySubmission from './pages/RegulatorySubmission';
+import DigitalTwin from './pages/DigitalTwin';
+import WhatIfSimulator from './pages/WhatIfSimulator';
+import BusinessImpactSimulator from './pages/BusinessImpactSimulator';
 import './index.css';
 
 const AnimatedRoutes = () => {
@@ -59,9 +64,11 @@ const AnimatedRoutes = () => {
           </motion.div>
         } />
         <Route path="/evidence" element={
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <EvidenceVault />
-          </motion.div>
+          <ErrorBoundary>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <EvidenceVault />
+            </motion.div>
+          </ErrorBoundary>
         } />
         <Route path="/calendar" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
@@ -75,6 +82,11 @@ const AnimatedRoutes = () => {
         } />
         <Route path="/inspection-pack" element={<InspectionPackView />} />
         <Route path="/submission-guide/:id" element={<SubmissionGuide />} />
+        <Route path="/submissions/:actionId" element={
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <RegulatorySubmission />
+          </motion.div>
+        } />
         <Route path="/document-preparation/:obligationCode" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <DocumentPreparation />
@@ -84,6 +96,16 @@ const AnimatedRoutes = () => {
         <Route path="/audit-logs" element={
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
             <AuditLogs />
+          </motion.div>
+        } />
+        <Route path="/digital-twin" element={
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+            <DigitalTwin />
+          </motion.div>
+        } />
+        <Route path="/simulator" element={
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+            <WhatIfSimulator />
           </motion.div>
         } />
         
@@ -99,6 +121,12 @@ const AnimatedRoutes = () => {
           <Route path="/admin/updates" element={<AdminRoute><RegulatoryUpdates /></AdminRoute>} />
           <Route path="/admin/updates/:id/impact" element={<AdminRoute><UpdateImpactAnalysis /></AdminRoute>} />
           <Route path="/admin/rules" element={<AdminRoute><AdminRuleManagement /></AdminRoute>} />
+          
+          <Route path="/updates/impact" element={
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <BusinessImpactSimulator />
+            </motion.div>
+          } />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

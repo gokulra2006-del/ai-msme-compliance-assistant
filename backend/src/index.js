@@ -1,5 +1,5 @@
 // backend/src/index.js
-require('dotenv').config();
+require('dotenv').config({ override: true });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -30,6 +30,10 @@ const adminUpdatesRoutes = require('./routes/adminUpdates');
 const inspectionRoutes = require('./routes/inspection');
 const notificationRoutes = require('./routes/notifications');
 const documentDraftRoutes = require('./routes/documentDrafts');
+const submissionRoutes = require('./routes/submissionRoutes');
+const simulatorRoutes = require('./routes/simulatorRoutes');
+const businessUpdatesRoutes = require('./routes/businessUpdates');
+const workflowRoutes = require('./routes/workflowRoutes');
 const migrateRules = require('./engine/migrateRules');
 const runReminderJob = require('./jobs/complianceReminderJob');
 
@@ -40,6 +44,7 @@ app.use(helmet());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/business/updates', businessUpdatesRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/obligations', obligationRoutes);
 app.use('/api/evidence', evidenceRoutes);
@@ -53,6 +58,9 @@ app.use('/api/audit-logs', auditRoutes);
 app.use('/api/inspection', inspectionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/document-drafts', documentDraftRoutes);
+app.use('/api/workflow', workflowRoutes);
+app.use('/api/submissions', submissionRoutes);
+app.use('/api/simulator', simulatorRoutes);
 
 // simple health endpoint
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
@@ -63,6 +71,7 @@ const startServer = async () => {
     await mongoose.connect(uri);
     console.log('MongoDB connected');
   } catch (err) {
+    console.error('MongoDB Atlas connection error:', err.message);
     console.log('Local MongoDB failed, starting in-memory DB fallback...');
     const { MongoMemoryServer } = require('mongodb-memory-server');
     const mongoServer = await MongoMemoryServer.create();
@@ -82,8 +91,29 @@ const startServer = async () => {
   setTimeout(runReminderJob, 5000); // run 5s after startup
   setInterval(runReminderJob, 15 * 60 * 1000); // run every 15 minutes
 
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const startListening = (port, attemptsLeft = 10) => {
+    const server = app.listen(port, () => console.log(`Server running on port ${port}`));
+
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE' && attemptsLeft > 0) {
+        const nextPort = port + 1;
+        console.warn(`Port ${port} is already in use. Retrying on ${nextPort}...`);
+        startListening(nextPort, attemptsLeft - 1);
+        return;
+      }
+
+      if (error.code === 'EADDRINUSE') {
+        console.error(`All ports between ${process.env.PORT || 5000} and ${port} are busy. Please stop the other server or set a free PORT.`);
+        process.exit(1);
+        return;
+      }
+
+      throw error;
+    });
+  };
+
+  const requestedPort = Number(process.env.PORT) || 5000;
+  startListening(requestedPort);
 };
 
 startServer();

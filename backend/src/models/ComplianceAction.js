@@ -15,8 +15,20 @@ const ComplianceActionSchema = new mongoose.Schema({
   priority: { type: String, enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'], default: 'MEDIUM' },
   
   // Tracking
+  status: { 
+    type: String, 
+    enum: ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'SUBMITTED_FOR_REVIEW', 'APPROVED', 'REJECTED'],
+    default: 'PENDING'
+  },
   completionDate: { type: Date },
   completedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  reviewer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  rejectionReason: { type: String },
+  reviewNotes: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    note: String,
+    date: { type: Date, default: Date.now }
+  }],
   
   // Rule Evaluation State
   applicability: { type: String, enum: ['APPLIES', 'INSUFFICIENT_DATA', 'DOES_NOT_APPLY'], required: true },
@@ -28,13 +40,7 @@ const ComplianceActionSchema = new mongoose.Schema({
   notes: { type: String },
   
   // Submission Assistance
-  submissionRecord: {
-    status: { type: String, enum: ['NOT_STARTED', 'READY', 'SUBMITTED', 'ACKNOWLEDGED', 'COMPLETED', 'FAILED'], default: 'NOT_STARTED' },
-    referenceNumber: { type: String },
-    submissionDate: { type: Date },
-    acknowledgementDocumentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Evidence' },
-    notes: { type: String }
-  },
+  submissionId: { type: mongoose.Schema.Types.ObjectId, ref: 'RegulatorySubmission' },
 
   source: { type: String }, // e.g. "RULE_EVALUATION", "EVIDENCE_EXPIRY", "MANUAL"
   

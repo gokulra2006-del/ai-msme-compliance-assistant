@@ -19,12 +19,22 @@ const ComplianceCalendar = () => {
   
   // Drawer state
   const [selectedAction, setSelectedAction] = useState<any | null>(null);
+  const { user } = useContext(AuthContext);
+  const [businessUsers, setBusinessUsers] = useState<any[]>([]);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
   const fetchActions = async () => {
     if (!token) return;
     try {
       const res = await getActions(token);
       setActions(res.data.data);
+      
+      if (user?.role === 'OWNER' || user?.role === 'COMPLIANCE_OFFICER') {
+        const { getBusinessUsers } = await import('../api/complianceActions');
+        const usersRes = await getBusinessUsers(token);
+        setBusinessUsers(usersRes.data.data);
+      }
     } catch (err: any) {
       if (err.response?.status === 401) navigate('/login');
     } finally {
@@ -63,6 +73,41 @@ const ComplianceCalendar = () => {
     } catch (err) {
       console.error(err);
       alert('Failed to mark completed');
+    }
+  };
+
+  const handleWorkflow = async (actionId: string, type: string) => {
+    try {
+      const { submitActionReview, approveAction, rejectAction } = await import('../api/complianceActions');
+      if (type === 'SUBMIT') {
+        await submitActionReview(actionId, token!);
+        alert('Submitted for review successfully');
+      } else if (type === 'APPROVE') {
+        await approveAction(actionId, token!);
+        alert('Action approved successfully');
+      } else if (type === 'REJECT') {
+        if (!rejectReason) return alert('Rejection reason required');
+        await rejectAction(actionId, rejectReason, token!);
+        setShowRejectModal(false);
+        setRejectReason('');
+        alert('Action rejected');
+      }
+      await fetchActions();
+      setSelectedAction(null);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Workflow action failed');
+    }
+  };
+
+  const handleAssign = async (userId: string) => {
+    try {
+      const { assignAction } = await import('../api/complianceActions');
+      await assignAction(selectedAction._id, userId, token!);
+      alert('Action assigned successfully');
+      await fetchActions();
+      setSelectedAction((prev: any) => ({ ...prev, assignedTo: userId, status: 'ASSIGNED' }));
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Assignment failed');
     }
   };
 
@@ -235,20 +280,72 @@ const ComplianceCalendar = () => {
                 </div>
               </div>
 
-              {selectedAction.status !== 'COMPLETED' ? (
+              {selectedAction.status === 'ASSIGNED' || selectedAction.status === 'IN_PROGRESS' || selectedAction.status === 'REJECTED' || selectedAction.status === 'ON_TRACK' || selectedAction.status === 'OVERDUE' || selectedAction.status === 'DUE_SOON' || selectedAction.status === 'PENDING' ? (
+                <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {(user?.role === 'OWNER' || user?.role === 'COMPLIANCE_OFFICER') && (
+                      <select 
+                        className="input" 
+                        style={{ padding: '6px 12px', width: 'auto' }}
+                        value={selectedAction.assignedTo || ''}
+                        onChange={(e) => handleAssign(e.target.value)}
+                      >
+                        <option value="">Unassigned</option>
+                        {businessUsers.map(u => (
+                          <option key={u._id} value={u._id}>{u.name} ({u.role})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button className="btn btn-outline" onClick={() => setSelectedAction(null)}>{t('ui.close')}</button>
+                    {(user?.role === 'ACCOUNTANT' || user?.role === 'OWNER') && (
+                       <button className="btn btn-accent" onClick={() => handleWorkflow(selectedAction._id, 'SUBMIT')}>Submit for Review</button>
+                    )}
+                    <button className="btn btn-primary" onClick={() => navigate(`/submissions/${selectedAction._id}`)}>
+                      Regulatory Submission Assistance
+                    </button>
+                  </div>
+                </div>
+              ) : selectedAction.status === 'SUBMITTED_FOR_REVIEW' ? (
                 <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                   <button className="btn btn-outline" onClick={() => setSelectedAction(null)}>{t('ui.close')}</button>
-                  <button className="btn btn-outline" onClick={() => navigate(`/submission-guide/${selectedAction._id}`)}>Prepare Submission</button>
-                  <button className="btn btn-accent" onClick={() => handleComplete(selectedAction._id)}>Mark as Completed</button>
+                  {(user?.role === 'COMPLIANCE_OFFICER' || user?.role === 'OWNER') && (
+                    <>
+                      <button className="btn btn-outline" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={() => setShowRejectModal(true)}>Reject</button>
+                      <button className="btn btn-accent" style={{ background: 'var(--success)' }} onClick={() => handleWorkflow(selectedAction._id, 'APPROVE')}>Approve</button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div style={{ marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                   <button className="btn btn-outline" onClick={() => setSelectedAction(null)}>{t('ui.close')}</button>
-                  <button className="btn btn-outline" onClick={() => handleReopen(selectedAction._id)}>Reopen Action</button>
+                  {(user?.role === 'OWNER' || user?.role === 'COMPLIANCE_OFFICER') && (
+                    <button className="btn btn-outline" onClick={() => handleReopen(selectedAction._id)}>Reopen Action</button>
+                  )}
                 </div>
               )}
             </div>
-          </div>
+            
+            {showRejectModal && (
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <div className="card" style={{ width: '400px', background: 'var(--bg-elevated)' }}>
+                    <h3 style={{ marginTop: 0 }}>Reject Action</h3>
+                    <textarea 
+                      className="input" 
+                      style={{ width: '100%', height: '100px', marginBottom: '16px' }} 
+                      placeholder="Enter rejection reason..."
+                      value={rejectReason}
+                      onChange={e => setRejectReason(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                      <button className="btn btn-outline" onClick={() => setShowRejectModal(false)}>Cancel</button>
+                      <button className="btn btn-accent" style={{ background: 'var(--danger)' }} onClick={() => handleWorkflow(selectedAction._id, 'REJECT')}>Confirm Reject</button>
+                    </div>
+                 </div>
+              </div>
+            )}
+            </div>
         </>
       )}
     </AppLayout>

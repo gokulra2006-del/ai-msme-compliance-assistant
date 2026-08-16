@@ -83,6 +83,24 @@ exports.getAlertsSummary = async (req, res) => {
       status: { $in: ['PENDING', 'SENT'] }
     });
 
+    const expiredEvidenceCount = await ComplianceReminder.countDocuments({
+      recipient: req.user.id,
+      reminderType: 'EXPIRED_EVIDENCE',
+      status: { $in: ['PENDING', 'SENT'] }
+    });
+
+    const pendingReviewCount = await ComplianceReminder.countDocuments({
+      recipient: req.user.id,
+      reminderType: { $in: ['PENDING_REVIEW', 'PENDING_APPROVAL'] },
+      status: { $in: ['PENDING', 'SENT'] }
+    });
+
+    const rejectedCount = await ComplianceReminder.countDocuments({
+      recipient: req.user.id,
+      reminderType: 'REJECTED_EVIDENCE',
+      status: { $in: ['PENDING', 'SENT'] }
+    });
+
     res.status(200).json({
       success: true,
       data: {
@@ -90,7 +108,10 @@ exports.getAlertsSummary = async (req, res) => {
         dueToday: dueTodayCount,
         dueSoon: dueSoonCount,
         early: earlyCount,
-        escalations: escalationCount
+        escalations: escalationCount,
+        expiredEvidence: expiredEvidenceCount,
+        pendingReview: pendingReviewCount,
+        rejected: rejectedCount
       }
     });
   } catch (err) {

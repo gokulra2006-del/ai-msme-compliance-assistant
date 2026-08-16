@@ -1,9 +1,8 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useMemo } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import LanguageSelector from '../components/LanguageSelector';
 import AppLayout from '../components/AppLayout';
 
 const EvidenceVault = () => {
@@ -20,6 +19,17 @@ const EvidenceVault = () => {
   const [obligations, setObligations] = useState<any[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [correctionLoading, setCorrectionLoading] = useState(false);
+
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterVerification, setFilterVerification] = useState('');
+  const [filterExpiry, setFilterExpiry] = useState('');
+
+  // Data Quality Audit State
+  const [showDataQuality, setShowDataQuality] = useState(false);
+  const [dataQuality, setDataQuality] = useState<any>(null);
+  const [dqLoading, setDqLoading] = useState(false);
 
   // Upload form state
   const [uploadForm, setUploadForm] = useState({
@@ -57,6 +67,19 @@ const EvidenceVault = () => {
     if (!token) { navigate('/login'); return; }
     fetchData();
   }, [token, authLoading, logout, navigate]);
+
+  const fetchDataQuality = async () => {
+    setDqLoading(true);
+    try {
+      const res = await axios.get(`${API}/evidence/data-quality`, { headers });
+      setDataQuality(res.data.data);
+      setShowDataQuality(true);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to fetch Data Quality Audit');
+    } finally {
+      setDqLoading(false);
+    }
+  };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,9 +143,23 @@ const EvidenceVault = () => {
     }
   };
 
-  const handleVerify = async (id: string, status: string) => {
+  const handleVerify = async (id: string, status: string, note: string = '') => {
     try {
-      await axios.put(`${API}/evidence/${id}/verify`, { status }, { headers });
+      if (status === 'UNDER_REVIEW') {
+        await axios.post(`${API}/workflow/evidence/${id}/submit`, { note }, { headers });
+        alert('Submitted for review');
+      } else if (status === 'VERIFIED') {
+        await axios.post(`${API}/workflow/evidence/${id}/approve`, { note }, { headers });
+        alert('Evidence approved');
+      } else if (status === 'REJECTED') {
+        if (!note) return alert('Rejection reason required');
+        await axios.post(`${API}/workflow/evidence/${id}/reject`, { reason: note }, { headers });
+        alert('Evidence rejected');
+      } else {
+        // Fallback for older statuses
+        await axios.put(`${API}/evidence/${id}/verify`, { status }, { headers });
+      }
+      setSelectedDoc(null);
       fetchData();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Verification failed');
@@ -155,18 +192,6 @@ const EvidenceVault = () => {
     }
   };
 
-  const handleLinkSuggestion = async () => {
-    const obligationCode = selectedDoc?.obligationMatch?.obligationCode;
-    if (!selectedDoc || !obligationCode) return;
-    try {
-      const response = await axios.put(`${API}/evidence/${selectedDoc._id}/link-obligation`, { obligationCode }, { headers });
-      setSelectedDoc(response.data.data);
-      await fetchData();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Unable to link evidence to this obligation.');
-    }
-  };
-
   const handleCorrectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDoc) return;
@@ -191,9 +216,6 @@ const EvidenceVault = () => {
   const selectedObl = obligations.find((o: any) => o.code === uploadForm.obligationCode);
   const availableDocTypes = selectedObl?.requiredEvidenceTypes || [];
 
-  if (authLoading || loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-muted)' }}>{t('loading', 'Loading...')}</div>;
-  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -224,10 +246,34 @@ const EvidenceVault = () => {
   const expiringDocs = requiredDocs.filter((d: any) => d.status === 'EXPIRING_SOON' || d.status === 'EXPIRED');
   const canReview = user?.role === 'ADMIN' || user?.role === 'COMPLIANCE_OFFICER';
 
+  const filteredEvidence = useMemo(() => {
+    return allEvidence.filter(ev => {
+      const matchSearch = (ev.documentName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
+                          (ev.documentType?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
+                          (ev.obligationCode || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchType = filterType ? ev.documentType === filterType : true;
+      const matchVerif = filterVerification ? ev.verificationStatus === filterVerification : true;
+      
+      let matchExpiry = true;
+      if (filterExpiry) {
+        if (filterExpiry === 'EXPIRED') matchExpiry = ev.expiryStatus === 'EXPIRED';
+        if (filterExpiry === 'EXPIRING_SOON') matchExpiry = ev.expiryStatus === 'EXPIRING_SOON';
+        if (filterExpiry === 'VALID') matchExpiry = ev.expiryStatus === 'VALID';
+      }
+
+      return matchSearch && matchType && matchVerif && matchExpiry;
+    });
+  }, [allEvidence, searchQuery, filterType, filterVerification, filterExpiry]);
+
+  if (authLoading || loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-muted)' }}>{t('loading', 'Loading...')}</div>;
+  }
+
   return (
-    <AppLayout pageTitle={t('topbar.evidence')}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-        <button className="btn btn-accent btn-sm" onClick={() => setShowUpload(true)}>+ {t('ui.upload')}</button>
+    <AppLayout pageTitle={t('topbar.evidence', 'Evidence Vault')}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '16px' }}>
+        <button className="btn btn-outline btn-sm" onClick={fetchDataQuality} disabled={dqLoading}>{dqLoading ? '...' : t('ui.audit', 'Data Quality Audit')}</button>
+        <button className="btn btn-accent btn-sm" onClick={() => setShowUpload(true)}>+ {t('ui.upload', 'Upload Document')}</button>
       </div>
       
       {uploadSuccess && <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--success)', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px', fontSize: '0.85rem' }}>{uploadSuccess}</div>}
@@ -240,21 +286,33 @@ const EvidenceVault = () => {
           )}
 
           {/* Summary Cards */}
-          <div className="metrics-row">
+          <div className="metrics-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' }}>
             <div className="card metric-card">
-              <div className="card-title">Total Required</div>
+              <div className="card-title">{t('metrics.total_required', 'Total Required')}</div>
               <div className="metric-value" style={{ color: 'var(--text-primary)' }}>{summary.totalRequired || 0}</div>
             </div>
             <div className="card metric-card">
-              <div className="card-title">Uploaded</div>
-              <div className="metric-value" style={{ color: 'var(--success)' }}>{summary.uploaded || 0}</div>
+              <div className="card-title">{t('metrics.total_documents', 'Total Documents')}</div>
+              <div className="metric-value" style={{ color: 'var(--text-primary)' }}>{allEvidence.length}</div>
             </div>
             <div className="card metric-card">
-              <div className="card-title">Missing</div>
+              <div className="card-title">{t('status.VERIFIED', 'Verified')}</div>
+              <div className="metric-value" style={{ color: 'var(--success)' }}>{allEvidence.filter(e => e.verificationStatus === 'VERIFIED').length}</div>
+            </div>
+            <div className="card metric-card">
+              <div className="card-title">{t('status.UNDER_REVIEW', 'Under Review')}</div>
+              <div className="metric-value" style={{ color: 'var(--accent)' }}>{allEvidence.filter(e => e.verificationStatus === 'UNDER_REVIEW').length}</div>
+            </div>
+            <div className="card metric-card">
+              <div className="card-title">{t('status.REJECTED', 'Rejected')}</div>
+              <div className="metric-value" style={{ color: 'var(--danger)' }}>{allEvidence.filter(e => e.verificationStatus === 'REJECTED').length}</div>
+            </div>
+            <div className="card metric-card">
+              <div className="card-title">{t('status.MISSING', 'Missing')}</div>
               <div className="metric-value" style={{ color: 'var(--danger)' }}>{summary.missing || 0}</div>
             </div>
             <div className="card metric-card">
-              <div className="card-title">Expiring / Expired</div>
+              <div className="card-title">{t('metrics.expiring_expired', 'Expiring / Expired')}</div>
               <div className="metric-value" style={{ color: 'var(--warning)' }}>{(summary.expiringSoon || 0) + (summary.expired || 0)}</div>
             </div>
           </div>
@@ -344,21 +402,43 @@ const EvidenceVault = () => {
           {/* Uploaded Documents */}
           {allEvidence.length > 0 && (
             <div className="card mt-24">
-              <h3 style={{ marginBottom: '16px' }}>All Uploaded Documents ({allEvidence.length})</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                <h3 style={{ margin: 0 }}>{t('documents.all_uploaded', 'All Uploaded Documents')} ({filteredEvidence.length})</h3>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <input type="text" className="form-input form-input-sm" placeholder={t('ui.search', 'Search...')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '150px' }} />
+                  <select className="form-input form-input-sm" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                    <option value="">{t('filter.all_types', 'All Types')}</option>
+                    {Array.from(new Set(allEvidence.map(e => e.documentType))).map(t => <option key={t} value={t as string}>{t as string}</option>)}
+                  </select>
+                  <select className="form-input form-input-sm" value={filterVerification} onChange={e => setFilterVerification(e.target.value)}>
+                    <option value="">{t('filter.all_status', 'All Status')}</option>
+                    <option value="VERIFIED">{t('status.VERIFIED', 'Verified')}</option>
+                    <option value="UNDER_REVIEW">{t('status.UNDER_REVIEW', 'Under Review')}</option>
+                    <option value="UNVERIFIED">{t('status.UNVERIFIED', 'Unverified')}</option>
+                    <option value="REJECTED">{t('status.REJECTED', 'Rejected')}</option>
+                  </select>
+                  <select className="form-input form-input-sm" value={filterExpiry} onChange={e => setFilterExpiry(e.target.value)}>
+                    <option value="">{t('filter.all_expiry', 'All Expiry')}</option>
+                    <option value="VALID">{t('status.VALID', 'Valid')}</option>
+                    <option value="EXPIRING_SOON">{t('status.EXPIRING_SOON', 'Expiring Soon')}</option>
+                    <option value="EXPIRED">{t('status.EXPIRED', 'Expired')}</option>
+                  </select>
+                </div>
+              </div>
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Obligation</th>
-                      <th>Verification</th>
-                      <th>Uploaded</th>
-                      <th>Actions</th>
+                      <th>{t('documents.name', 'Name')}</th>
+                      <th>{t('documents.type', 'Type')}</th>
+                      <th>{t('documents.obligation', 'Obligation')}</th>
+                      <th>{t('documents.verification', 'Verification')}</th>
+                      <th>{t('documents.uploaded', 'Uploaded')}</th>
+                      <th>{t('ui.actions', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {allEvidence.map((ev: any) => (
+                    {filteredEvidence.map((ev: any) => (
                       <tr key={ev._id}>
                         <td style={{ fontWeight: 500 }}>{ev.documentName}</td>
                         <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{ev.documentType}</td>
@@ -472,8 +552,31 @@ const EvidenceVault = () => {
             <div style={{ padding: '24px' }}>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                 <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => handleViewFile(selectedDoc._id)}>View File</button>
-                {selectedDoc.verificationStatus === 'PENDING' && (
-                  <button className="btn btn-accent" style={{ flex: 1 }} onClick={() => handleVerify(selectedDoc._id, 'VERIFIED')}>Verify Document</button>
+                
+                {(user?.role === 'ACCOUNTANT' || user?.role === 'OWNER') && ['PENDING', 'UNVERIFIED', 'REJECTED'].includes(selectedDoc.verificationStatus) && (
+                  <button className="btn btn-accent" style={{ flex: 1 }} onClick={() => handleVerify(selectedDoc._id, 'UNDER_REVIEW')}>Submit for Review</button>
+                )}
+                
+                {(user?.role === 'COMPLIANCE_OFFICER' || user?.role === 'OWNER') && selectedDoc.verificationStatus === 'UNDER_REVIEW' && (
+                  <>
+                    <button 
+                      className="btn btn-accent" 
+                      style={{ flex: 1, background: 'var(--success)' }} 
+                      onClick={() => handleVerify(selectedDoc._id, 'VERIFIED', 'Looks good')}
+                    >
+                      Approve
+                    </button>
+                    <button 
+                      className="btn btn-outline" 
+                      style={{ flex: 1, borderColor: 'var(--danger)', color: 'var(--danger)' }} 
+                      onClick={() => {
+                        const reason = window.prompt("Rejection Reason:");
+                        if (reason) handleVerify(selectedDoc._id, 'REJECTED', reason);
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -529,6 +632,35 @@ const EvidenceVault = () => {
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                     No metadata extracted automatically.
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Data Quality Audit Modal */}
+      {showDataQuality && (
+        <>
+          <div className="drawer-overlay" onClick={() => setShowDataQuality(false)} />
+          <div className="drawer" style={{ width: '600px', maxWidth: '100%' }}>
+            <div className="drawer-header">
+              <h2 style={{ fontSize: '1.25rem' }}>{t('audit.data_quality', 'Data Quality Audit')}</h2>
+              <button className="drawer-close" onClick={() => setShowDataQuality(false)}>✕</button>
+            </div>
+            <div style={{ padding: '24px' }}>
+              <div className="card" style={{ marginBottom: '16px', background: 'var(--bg-primary)' }}>
+                <h3 style={{ margin: '0 0 8px 0' }}>{t('audit.findings', 'Findings')} ({dataQuality?.totalFindings || 0})</h3>
+                {dataQuality?.findings?.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {dataQuality.findings.map((f: any, i: number) => (
+                      <li key={i}>
+                        <strong>{f.issue}</strong>: {f.detail}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p style={{ color: 'var(--success)' }}>{t('audit.no_issues', 'No data quality issues found.')}</p>
                 )}
               </div>
             </div>

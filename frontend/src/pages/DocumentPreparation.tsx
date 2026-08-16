@@ -24,6 +24,7 @@ const DocumentPreparation = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [working, setWorking] = useState('');
@@ -49,9 +50,33 @@ const DocumentPreparation = () => {
     }
   };
 
+  const loadDashboard = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/document-drafts/dashboard`, { headers });
+      setDashboardData(response.data.data);
+      setError('');
+    } catch (err: any) {
+      if (err.response?.status === 401) { logout(); navigate('/login'); return; }
+      setError(err.response?.data?.error || 'Unable to load document dashboard.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!authLoading && !token) navigate('/login');
-    if (!authLoading && token && obligationCode) loadPreparation();
+    if (!authLoading && !token) {
+      navigate('/login');
+      return;
+    }
+    if (!authLoading && token) {
+      if (obligationCode) {
+        loadPreparation();
+      } else {
+        loadDashboard();
+      }
+    }
   }, [authLoading, token, obligationCode]);
 
   const generate = async (templateKey: string) => {
@@ -130,7 +155,54 @@ const DocumentPreparation = () => {
   }
 
   if (!obligationCode) {
-    return <AppLayout pageTitle={t('documents.title', 'Document Preparation')}><div className="card">{t('documents.selectObligation', 'Select an applicable obligation first.')}</div></AppLayout>;
+    if (loading) return <div className="page-loading">{t('loading', 'Loading…')}</div>;
+    return (
+      <AppLayout pageTitle={t('documents.title', 'Document Preparation')}>
+        <div className="document-preparation">
+          <h1 className="page-title">{t('documents.dashboard', 'Document Preparation Dashboard')}</h1>
+          {error && <div className="error-box" role="alert">{error}</div>}
+          
+          <div className="metrics-grid">
+            <div className="metric-card">
+              <span className="metric-value">{dashboardData?.actions?.length || 0}</span>
+              <span className="metric-label">Documents Needed</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-value">{dashboardData?.draftsInProgress?.length || 0}</span>
+              <span className="metric-label">Drafts In Progress</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-value">{dashboardData?.awaitingReview?.length || 0}</span>
+              <span className="metric-label">Awaiting Review</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-value">{dashboardData?.approvedDocuments?.length || 0}</span>
+              <span className="metric-label">Approved</span>
+            </div>
+          </div>
+
+          <section className="card" style={{ marginTop: '20px' }}>
+            <h2 className="card-title">Obligations Requiring Documents</h2>
+            {dashboardData?.actions?.length ? (
+              <div className="table-wrap">
+                <table>
+                  <thead><tr><th>Obligation</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {dashboardData.actions.map((action: any) => (
+                      <tr key={action._id}>
+                        <td>{action.title || action.ruleCode}</td>
+                        <td><span className="badge badge-muted">{action.status}</span></td>
+                        <td><button className="btn btn-outline btn-sm" onClick={() => navigate(`/document-preparation/${encodeURIComponent(action.ruleCode)}`)}>Prepare</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <p className="empty-state">No required documents found.</p>}
+          </section>
+        </div>
+      </AppLayout>
+    );
   }
 
   return (
@@ -186,14 +258,24 @@ const DocumentPreparation = () => {
           {data?.evidenceChecklist?.length ? (
             <div className="document-checklist">
               {data.evidenceChecklist.map((item: any) => (
-                <div className={`document-checklist__row ${item.status === 'VERIFIED' ? 'is-available' : 'is-missing'}`} key={item.documentType}>
-                  <span aria-hidden="true">{item.status === 'VERIFIED' ? '✓' : '!'}</span>
-                  <div><strong>{item.documentType}</strong><small>{item.status === 'VERIFIED' ? item.documentName : t('documents.notVerified', 'No verified evidence linked')}</small></div>
+                <div className={`document-checklist__row ${item.satisfied ? 'is-available' : 'is-missing'}`} key={item.documentType}>
+                  <span aria-hidden="true">{item.satisfied ? '✓' : '!'}</span>
+                  <div>
+                    <strong>{item.documentType}</strong>
+                    <small>
+                      {item.satisfied
+                        ? item.documentName
+                        : item.suggestedEvidence
+                          ? t('evidence.possibleMatchNeedsLink', 'A similar document exists but is not linked to this obligation')
+                          : t('documents.notVerified', 'No verified evidence linked')}
+                    </small>
+                  </div>
                   <em>{item.status}</em>
                 </div>
               ))}
             </div>
-          ) : <p className="empty-state">{t('documents.noEvidenceRequired', 'No required evidence is configured for this obligation.')}</p>}
+          ) : <p className="empty-state">{data?.noEvidenceRequirementNotice || t('documents.noEvidenceRequired', 'No required evidence is configured for this obligation.')}</p>}
+          <p className="form-hint">{data?.verificationMeaning}</p>
         </section>
 
         <section>

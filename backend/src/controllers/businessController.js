@@ -48,6 +48,32 @@ exports.getBusiness = async (req, res) => {
   }
 };
 
+const rulesEngine = require('../engine/rulesEngine');
+exports.getDigitalTwin = async (req, res) => {
+  try {
+    const business = await Business.findOne({ user: req.user.id }).lean();
+    if (!business) {
+      return res.status(404).json({ success: false, error: 'Business not found' });
+    }
+
+    const activeRules = await ComplianceRule.find({ status: 'ACTIVE' });
+    const evaluatedRules = rulesEngine.evaluateRules(business, activeRules);
+
+    // Filter to only APPLIES for the digital twin view
+    const applicable = evaluatedRules.filter(r => r.status === 'APPLIES');
+
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        profile: business,
+        evaluatedObligations: applicable
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 exports.updateBusiness = async (req, res) => {
   try {
     let business = await Business.findOne({ user: req.user.id });

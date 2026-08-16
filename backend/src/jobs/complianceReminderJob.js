@@ -211,11 +211,88 @@ async function runReminderJob() {
       }
     }
 
+    // ── PHASE 1B: Compliance Action Workflow States ─────────────────────
+    const workflowActions = await ComplianceAction.find({
+      status: { $in: ['SUBMITTED_FOR_REVIEW', 'REJECTED'] }
+    }).populate('business');
+
+    for (const action of workflowActions) {
+      try {
+        if (!action.business || !action.business.user) continue;
+
+        if (action.status === 'SUBMITTED_FOR_REVIEW') {
+          // Notify COMPLIANCE_OFFICER (Level 2) that approval is pending
+          const recipients = await getRecipients(action.business, action, 2);
+          for (const r of recipients) {
+            // Only notify reviewers, not the assignee who submitted it
+            if (r.userId === (action.assignedTo && action.assignedTo.toString())) continue;
+            
+            try {
+              const dispatched = await reminderService.dispatchReminder({
+                complianceAction: action._id,
+                business: action.business._id,
+                recipient: r.userId,
+                recipientRole: r.role,
+                reminderType: 'PENDING_APPROVAL',
+                severity: 'MEDIUM',
+                escalationLevel: 2,
+                title: 'Action Pending Approval',
+                message: `"${action.title}" was submitted for review and is pending your approval.`,
+                channel: 'IN_APP',
+                scheduledFor: now,
+                metadata: { priority: action.priority, category: action.category, ruleCode: action.ruleCode }
+              });
+              if (dispatched) generatedCount++;
+            } catch (err) {
+              if (err.code !== 11000) errorCount++;
+            }
+          }
+        } else if (action.status === 'REJECTED') {
+          // Notify assignee (Level 0)
+          const recipients = await getRecipients(action.business, action, 0);
+          for (const r of recipients) {
+            try {
+              const dispatched = await reminderService.dispatchReminder({
+                complianceAction: action._id,
+                business: action.business._id,
+                recipient: r.userId,
+                recipientRole: r.role,
+                reminderType: 'REJECTED_EVIDENCE', // Reusing this for rejected action
+                severity: 'HIGH',
+                escalationLevel: 0,
+                title: 'Action Rejected',
+                message: `Your submitted action "${action.title}" was rejected. Please review and correct it.`,
+                channel: 'IN_APP',
+                scheduledFor: now,
+                metadata: { priority: action.priority, category: action.category, ruleCode: action.ruleCode, rejectionReason: action.rejectionReason }
+              });
+              if (dispatched) generatedCount++;
+            } catch (err) {
+              if (err.code !== 11000) errorCount++;
+            }
+          }
+        }
+      } catch (workflowErr) {
+        console.error(`[ReminderJob] Error processing workflow action ${action._id}:`, workflowErr.message);
+        errorCount++;
+      }
+    }
+
     // ── PHASE 2: Evidence Expiry Alerts ──────────────────────────────────
+    // Uses the existing reminder engine — no separate notification system is
+    // introduced. Only the current, non-archived version of a document can
+    // trigger an expiry reminder, so a replaced or archived file never generates
+    // a reminder for a document that is no longer in use. Documents with no
+    // expiry date on record are simply not in scope; no expiry is assumed.
     const expiryThreshold = new Date(now.getTime() + EVIDENCE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-    
+
+    // Include both future expiring and already expired (up to 30 days ago to prevent endless spam)
+    const expiredThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const expiringEvidence = await Evidence.find({
-      expiryDate: { $ne: null, $lte: expiryThreshold, $gt: now }
+      expiryDate: { $ne: null, $lte: expiryThreshold, $gte: expiredThreshold },
+      isLatestVersion: { $ne: false },
+      archived: { $ne: true },
+      verificationStatus: { $nin: ['ARCHIVED', 'REJECTED'] }
     }).populate('business');
 
     for (const ev of expiringEvidence) {
@@ -223,19 +300,25 @@ async function runReminderJob() {
         if (!ev.business || !ev.business.user) continue;
 
         const daysUntilExpiry = diffDays(now, ev.expiryDate);
+        const isExpired = daysUntilExpiry < 0;
 
-        // Only generate at key thresholds: 30, 7, 1, 0 days
-        if (![30, 7, 1, 0].some(d => daysUntilExpiry === d || (d === 30 && daysUntilExpiry <= 30 && daysUntilExpiry > 7))) {
-          // Allow the first alert at any point within 30 days, then specific days
-          if (daysUntilExpiry > 7) {
-            // This is the "within 30 days" window — generate once
-          } else {
-            continue;
+        // Only generate at key thresholds: 30, 7, 1, 0, and then every 7 days when expired
+        if (!isExpired) {
+          if (![30, 7, 1, 0].some(d => daysUntilExpiry === d || (d === 30 && daysUntilExpiry <= 30 && daysUntilExpiry > 7))) {
+            if (daysUntilExpiry > 7) {
+              // This is the "within 30 days" window — generate once
+            } else {
+              continue;
+            }
           }
+        } else {
+          // If expired, only remind if it's a multiple of 7 days
+          if (Math.abs(daysUntilExpiry) % 7 !== 0 && Math.abs(daysUntilExpiry) !== 1) continue;
         }
 
-        const severity = daysUntilExpiry <= 1 ? 'HIGH' : daysUntilExpiry <= 7 ? 'MEDIUM' : 'LOW';
-
+        const severity = isExpired ? 'CRITICAL' : daysUntilExpiry <= 1 ? 'HIGH' : daysUntilExpiry <= 7 ? 'MEDIUM' : 'LOW';
+        const reminderType = isExpired ? 'EXPIRED_EVIDENCE' : 'EVIDENCE_EXPIRING';
+        
         const owner = await User.findById(ev.business.user).lean();
         if (!owner) continue;
 
@@ -245,19 +328,16 @@ async function runReminderJob() {
             business: ev.business._id,
             recipient: owner._id,
             recipientRole: owner.role || 'OWNER',
-            reminderType: 'EVIDENCE_EXPIRING',
+            reminderType,
             severity,
-            escalationLevel: 0,
-            title: 'Evidence Document Expiring',
-            message: `Document "${ev.documentName}" (${ev.documentType}) expires in ${daysUntilExpiry} day(s).`,
+            escalationLevel: isExpired ? 1 : 0,
+            title: isExpired ? 'Evidence Document Expired' : 'Evidence Document Expiring',
+            message: isExpired 
+              ? `Document "${ev.documentName}" (${ev.documentType}) expired ${Math.abs(daysUntilExpiry)} day(s) ago.`
+              : `Document "${ev.documentName}" (${ev.documentType}) expires in ${daysUntilExpiry} day(s).`,
             channel: 'IN_APP',
             scheduledFor: now,
-            metadata: {
-              evidenceId: ev._id,
-              documentType: ev.documentType,
-              obligationCode: ev.obligationCode,
-              expiryDate: ev.expiryDate
-            }
+            metadata: { evidenceId: ev._id, documentType: ev.documentType, obligationCode: ev.obligationCode, expiryDate: ev.expiryDate }
           });
           if (dispatched) generatedCount++;
         } catch (err) {
@@ -265,6 +345,85 @@ async function runReminderJob() {
         }
       } catch (evErr) {
         console.error(`[ReminderJob] Error processing evidence ${ev._id}:`, evErr.message);
+        errorCount++;
+      }
+    }
+
+    // ── PHASE 3: Evidence Workflow Reminders ──────────────────────────────
+    // Superseded and archived documents are excluded — a document that has been
+    // replaced no longer needs a review or correction reminder.
+    const workflowEvidence = await Evidence.find({
+      verificationStatus: { $in: ['UNDER_REVIEW', 'REJECTED'] },
+      isLatestVersion: { $ne: false },
+      archived: { $ne: true }
+    }).populate('business');
+
+    for (const ev of workflowEvidence) {
+      try {
+        if (!ev.business || !ev.business.user) continue;
+        const owner = await User.findById(ev.business.user).lean();
+        if (!owner) continue;
+
+        if (ev.verificationStatus === 'UNDER_REVIEW') {
+          // PENDING_REVIEW logic: If under review for more than 2 days, escalate
+          const daysInReview = diffDays(ev.updatedAt || ev.createdAt, now);
+          if (daysInReview >= 2) {
+            // Find COMPLIANCE_OFFICERs to notify
+            const officers = await User.find({ business: ev.business._id, role: 'COMPLIANCE_OFFICER' }).lean();
+            const recipients = officers.length > 0 ? officers : [owner];
+            
+            for (const r of recipients) {
+              try {
+                const dispatched = await reminderService.dispatchReminder({
+                  complianceAction: null,
+                  business: ev.business._id,
+                  recipient: r._id,
+                  recipientRole: r.role || 'OWNER',
+                  reminderType: 'PENDING_REVIEW',
+                  severity: 'MEDIUM',
+                  escalationLevel: 2,
+                  title: 'Evidence Pending Review',
+                  message: `Document "${ev.documentName}" has been waiting for review for ${daysInReview} days.`,
+                  channel: 'IN_APP',
+                  scheduledFor: now,
+                  metadata: { evidenceId: ev._id, documentType: ev.documentType, obligationCode: ev.obligationCode }
+                });
+                if (dispatched) generatedCount++;
+              } catch (err) {
+                if (err.code !== 11000) errorCount++;
+              }
+            }
+          }
+        } else if (ev.verificationStatus === 'REJECTED') {
+          // Notify assignee (Accountant)
+          // Evidence doesn't have `assignedTo`, so notify Accountant or Owner
+          const accountants = await User.find({ business: ev.business._id, role: 'ACCOUNTANT' }).lean();
+          const recipients = accountants.length > 0 ? accountants : [owner];
+          
+          for (const r of recipients) {
+            try {
+              const dispatched = await reminderService.dispatchReminder({
+                complianceAction: null,
+                business: ev.business._id,
+                recipient: r._id,
+                recipientRole: r.role || 'OWNER',
+                reminderType: 'REJECTED_EVIDENCE',
+                severity: 'HIGH',
+                escalationLevel: 0,
+                title: 'Evidence Rejected',
+                message: `Document "${ev.documentName}" was rejected and requires correction.`,
+                channel: 'IN_APP',
+                scheduledFor: now,
+                metadata: { evidenceId: ev._id, documentType: ev.documentType, obligationCode: ev.obligationCode }
+              });
+              if (dispatched) generatedCount++;
+            } catch (err) {
+              if (err.code !== 11000) errorCount++;
+            }
+          }
+        }
+      } catch (evErr) {
+        console.error(`[ReminderJob] Error processing workflow evidence ${ev._id}:`, evErr.message);
         errorCount++;
       }
     }
