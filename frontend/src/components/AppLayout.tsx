@@ -1,4 +1,5 @@
-import { useState, useEffect, ReactNode, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, LayoutDashboard, Bot, Calendar, ClipboardList, FolderLock, Settings, Users, Building2, ScrollText, LogOut, ShieldCheck, Bell, Circle, FilePenLine, Beaker, Database } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
@@ -236,7 +237,7 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
                 style={{ cursor: 'pointer' }}
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                {user?.name?.[0] || 'U'}
+                <img src="/logo.svg" alt="SurakshaSetu AI logo" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
               </div>
               
               {showUserMenu && (

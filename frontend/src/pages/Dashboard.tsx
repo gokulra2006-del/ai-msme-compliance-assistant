@@ -1,10 +1,11 @@
 import { useEffect, useState, useContext } from 'react';
+import type { CSSProperties } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import LanguageSelector from '../components/LanguageSelector';
 import AppLayout from '../components/AppLayout';
+import { UserRound, ClipboardList, UploadCloud, CalendarDays, FileText, ShieldCheck } from 'lucide-react';
 
 const Dashboard = () => {
   const { token, user, loading: authLoading, logout } = useContext(AuthContext);
@@ -79,26 +80,6 @@ const Dashboard = () => {
       case 'LOW': return 'badge-green';
       default: return 'badge-muted';
     }
-  };
-
-  const formatFieldName = (field: string) => {
-    const names: Record<string, string> = {
-      totalWorkers: 'Total Workers',
-      contractWorkers: 'Contract Workers',
-      gstin_or_turnover: 'GSTIN / Turnover',
-      state: 'State',
-      district: 'District',
-      industry: 'Industry',
-      subIndustry: 'Sub-industry',
-      boiler: 'Boiler',
-      coldStorage: 'Cold Storage',
-      effluent: 'Effluent Discharge',
-      solidWaste: 'Solid Waste',
-      hazardousWaste: 'Hazardous Waste',
-      plasticPackaging: 'Plastic Packaging',
-      packagedRetail: 'Packaged Retail'
-    };
-    return names[field] || field;
   };
 
   // Derive Critical Issues
@@ -184,13 +165,33 @@ const Dashboard = () => {
           ) : (
             <>
               {/* Quick Actions Bar */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
-                {(user?.role === 'OWNER' || !user?.role) && <Link to="/onboarding" className="btn btn-outline btn-sm">{t('nav.editProfile').replace('⚙️ ', '')}</Link>}
-                <Link to="/obligations" className="btn btn-outline btn-sm">{t('nav.obligations').replace('📋 ', '')}</Link>
-                <Link to="/evidence" className="btn btn-outline btn-sm">{t('ui.upload')}</Link>
-                <Link to="/calendar" className="btn btn-outline btn-sm">{t('ui.viewCalendar')}</Link>
-                <Link to="/updates/impact" className="btn btn-outline btn-sm">View Regulatory Impacts</Link>
-                <Link to="/digital-twin" className="btn btn-outline btn-sm">{t('ui.review', 'Review')}</Link>
+              <div className="dashboard-quick-actions">
+                {(user?.role === 'OWNER' || !user?.role) && (
+                  <Link to="/onboarding" className="dashboard-action-pill">
+                    <UserRound size={18} />
+                    <span>{t('nav.editProfile').replace('⚙️ ', '')}</span>
+                  </Link>
+                )}
+                <Link to="/obligations" className="dashboard-action-pill">
+                  <ClipboardList size={18} />
+                  <span>{t('nav.obligations').replace('📋 ', '')}</span>
+                </Link>
+                <Link to="/evidence" className="dashboard-action-pill">
+                  <UploadCloud size={18} />
+                  <span>{t('ui.upload')}</span>
+                </Link>
+                <Link to="/calendar" className="dashboard-action-pill">
+                  <CalendarDays size={18} />
+                  <span>{t('ui.viewCalendar')}</span>
+                </Link>
+                <Link to="/updates/impact" className="dashboard-action-pill">
+                  <FileText size={18} />
+                  <span>View Regulatory Impacts</span>
+                </Link>
+                <Link to="/digital-twin" className="dashboard-action-pill">
+                  <ShieldCheck size={18} />
+                  <span>{t('ui.review', 'Review')}</span>
+                </Link>
               </div>
 
           {/* Compliance Alerts Section */}
@@ -254,10 +255,10 @@ const Dashboard = () => {
                                 displayRiskData.riskLevel === 'MODERATE' ? 'var(--accent-light)' : 
                                 'var(--success)';
             return (
-            <div className="card mb-24" style={{ 
-              background: displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.05)' : 
-                          displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.05)' : 
-                          'rgba(255,255,255,0.02)',
+            <div className="dashboard-risk-shell card mb-24" style={{ 
+              background: displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.04)' : 
+                          displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.04)' : 
+                          'rgba(255,255,255,0.22)',
               border: `1px solid ${
                 displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.2)' : 
                 displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.2)' : 
@@ -268,14 +269,24 @@ const Dashboard = () => {
                 <div style={{ textAlign: 'center', paddingRight: '24px', borderRight: '1px solid var(--border)' }}>
                   <h2 className="card-title micro" style={{ textTransform: 'uppercase' }}>{t('dash.complianceRisk')}</h2>
                   
-                  <div style={{ position: 'relative', width: '140px', height: '140px', margin: '24px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
-                      <circle cx="50" cy="50" r="45" fill="none" stroke={strokeColor} strokeWidth="6" strokeDasharray="283" strokeDashoffset={283 - (283 * displayRiskData.score) / 100} style={{ transition: 'stroke-dashoffset 1s ease-out' }} strokeLinecap="round" transform="rotate(-90 50 50)" />
+                  <div className="risk-score-ring" style={{ '--ring-color': strokeColor } as CSSProperties}>
+                    <svg viewBox="0 0 100 100" aria-label="Compliance risk score">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(15, 23, 42, 0.08)" strokeWidth="6" />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        fill="none"
+                        stroke={strokeColor}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeDasharray={264}
+                        strokeDashoffset={264 - (264 * displayRiskData.score) / 100}
+                        transform="rotate(-90 50 50)"
+                        style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+                      />
                     </svg>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1, zIndex: 1, color: 'var(--text-primary)' }}>
-                      {displayRiskData.score}%
-                    </div>
+                    <div className="risk-score-value">{displayRiskData.score}%</div>
                   </div>
                   <div className={`badge ${getRiskBadgeClass(displayRiskData.riskLevel)}`} style={{ fontSize: '0.9rem', padding: '6px 12px' }}>
                     {t(`risk.${displayRiskData.riskLevel}`)}

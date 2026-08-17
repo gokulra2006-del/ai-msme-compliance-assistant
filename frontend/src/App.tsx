@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -30,6 +30,16 @@ import './index.css';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  const { token, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (token && (location.pathname === '/login' || location.pathname === '/register')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -38,6 +48,8 @@ const AnimatedRoutes = () => {
             <Login />
           </motion.div>
         } />
+        <Route path="/auth/google" element={<Navigate to="/login?google=disabled" replace />} />
+        <Route path="/auth/ggogle" element={<Navigate to="/login?google=disabled" replace />} />
         <Route path="/register" element={
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
             <Register />
@@ -128,8 +140,8 @@ const AnimatedRoutes = () => {
             </motion.div>
           } />
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to={token ? '/dashboard' : '/login'} replace />} />
+        <Route path="*" element={<Navigate to={token ? '/dashboard' : '/login'} replace />} />
       </Routes>
     </AnimatePresence>
   );

@@ -1,21 +1,69 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
+const GoogleGIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.61l6.85-6.85C35.99 2.38 30.66 0 24 0 14.64 0 6.58 5.38 2.56 13.22l7.98 6.18C12.4 13.68 17.63 9.5 24 9.5z" />
+    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.15-3.12-.42-4.58H24v8.68h12.74c-.56 3-2.4 5.53-5.11 7.23l8.27 6.41C43.7 36.7 46.5 31.28 46.5 24.5z" />
+    <path fill="#FBBC05" d="M31.63 35.8c-2.13 1.42-4.86 2.2-7.63 2.2-6.37 0-11.76-4.3-13.7-10.08l-8.14 6.3C4.62 42.5 13.34 48 24 48c7.2 0 13.26-2.37 17.67-6.44l-9.04-5.76z" />
+    <path fill="#34A853" d="M11.38 27.92A14.57 14.57 0 0 1 10.5 24c0-1.63.29-3.2.81-4.68L2.56 13.22A23.4 23.4 0 0 0 0 24c0 3.77.9 7.34 2.56 10.52l8.82-6.6z" />
+  </svg>
+);
 
 const Login = () => {
   const [email, setEmail] = useState('test@example.com');
   const [password, setPassword] = useState('password123');
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState(email);
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get('google') === 'disabled') {
+      setError('Google sign-in is not configured yet. Please use email and password to continue.');
+    }
+
+    const token = params.get('token');
+    const userEmail = params.get('user');
+    const storedToken = localStorage.getItem('token');
+
+    if (storedToken) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    if (token && userEmail) {
+      localStorage.setItem('token', token);
+      login(token, {
+        id: userEmail,
+        name: userEmail.split('@')[0],
+        email: userEmail,
+        role: 'OWNER'
+      });
+      navigate('/dashboard', { replace: true });
+    }
+  }, [location.search, login, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
       login(res.data.token, res.data.user);
@@ -27,179 +75,180 @@ const Login = () => {
     }
   };
 
-  // SurakshaSetu (Rule Bridge) Brand Expression
-  const SurakshaSetuBrand = () => {
-    const leftCables = [
-      {x: 120, y1: 244, y2: 258},
-      {x: 140, y1: 228, y2: 257},
-      {x: 160, y1: 212, y2: 255.5},
-      {x: 180, y1: 196, y2: 254},
-    ];
-    const rightCables = [
-      {x: 280, y1: 244, y2: 258},
-      {x: 260, y1: 228, y2: 257},
-      {x: 240, y1: 212, y2: 255.5},
-      {x: 220, y1: 196, y2: 254},
-    ];
+  const handleSendResetOtp = async () => {
+    if (!forgotEmail) {
+      setError('Please enter the email address first.');
+      return;
+    }
 
-    return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {/* Background ambient glow */}
-        <div style={{ position: 'absolute', width: '800px', height: '600px', background: 'radial-gradient(ellipse at 50% 50%, rgba(0,230,118,0.08) 0%, rgba(59,130,246,0.05) 40%, rgba(0,0,0,0) 70%)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0 }} />
-        
-        {/* Abstract Architectural SVG Logo */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: 'relative', zIndex: 1, width: '400px', height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <svg viewBox="0 0 400 400" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-            <defs>
-              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="rgba(59, 130, 246, 0.15)" /> {/* Blue hint */}
-                <stop offset="100%" stopColor="rgba(0, 230, 118, 0.05)" /> {/* Green hint */}
-              </linearGradient>
-              <linearGradient id="sGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" /> {/* Brand Blue */}
-                <stop offset="100%" stopColor="#00E676" /> {/* Brand Green */}
-              </linearGradient>
-              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="6" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-            </defs>
+    setForgotLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await axios.post('http://localhost:5000/api/auth/send-otp', { email: forgotEmail });
+      setOtpSent(true);
+      setOtpVerified(false);
+      setSuccess(`OTP sent to ${forgotEmail}.`);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Unable to send reset OTP.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
-            {/* Shield Outline */}
-            <motion.path
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 1.5, ease: "easeInOut" }}
-              d="M 200 40 L 320 80 L 320 220 C 320 300 200 360 200 360 C 200 360 80 300 80 220 L 80 80 Z"
-              fill="url(#shieldGrad)"
-              stroke="rgba(59, 130, 246, 0.6)"
-              strokeWidth="3"
-            />
+  const handleVerifyResetOtp = async () => {
+    if (!forgotOtp) {
+      setError('Please enter the OTP you received.');
+      return;
+    }
 
-            {/* The "S" Curve Ribbon */}
-            <motion.path
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 1.5, delay: 0.5, ease: "easeInOut" }}
-              d="M 300 110 C 180 110 120 180 200 210 C 280 240 220 310 100 310"
-              fill="none"
-              stroke="url(#sGrad)"
-              strokeWidth="28"
-              strokeLinecap="round"
-              style={{ filter: 'url(#glow)' }}
-            />
+    setForgotLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await axios.post('http://localhost:5000/api/auth/verify-otp', { email: forgotEmail, otp: forgotOtp });
+      setOtpVerified(true);
+      setSuccess('OTP verified successfully.');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Invalid or expired OTP.');
+      setOtpVerified(false);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
-            {/* The Bridge (Central Pillar + Suspension) */}
-            <motion.g
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 1.2, ease: "easeOut" }}
-            >
-              {/* Central Pillar */}
-              <path d="M 192 180 L 208 180 L 214 340 L 186 340 Z" fill="#0f172a" stroke="#3b82f6" strokeWidth="1.5" />
-              <path d="M 200 180 L 208 180 L 214 340 L 200 340 Z" fill="rgba(59, 130, 246, 0.2)" />
-              
-              {/* Bridge Deck */}
-              <path d="M 80 260 Q 200 245 320 260 L 320 270 Q 200 255 80 270 Z" fill="#0f172a" stroke="#3b82f6" strokeWidth="1.5" />
-              
-              {/* Main Suspension Cables */}
-              <path d="M 200 180 L 80 260 M 200 180 L 320 260" stroke="#00E676" strokeWidth="2.5" fill="none" style={{ filter: 'url(#glow)' }} />
-              
-              {/* Vertical Support Cables */}
-              {leftCables.map((c, i) => (
-                <line key={`lc-${i}`} x1={c.x} y1={c.y1} x2={c.x} y2={c.y2} stroke="rgba(0, 230, 118, 0.6)" strokeWidth="1.5" />
-              ))}
-              {rightCables.map((c, i) => (
-                <line key={`rc-${i}`} x1={c.x} y1={c.y1} x2={c.x} y2={c.y2} stroke="rgba(0, 230, 118, 0.6)" strokeWidth="1.5" />
-              ))}
-            </motion.g>
-          </svg>
-        </motion.div>
+  const handleResetPassword = async () => {
+    if (!forgotEmail || !forgotOtp) {
+      setError('Please verify the OTP before resetting your password.');
+      return;
+    }
 
-        {/* Narrative typography */}
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.8 }}
-          style={{ position: 'absolute', bottom: '60px', textAlign: 'center', zIndex: 10, width: '100%', padding: '0 40px' }}
-        >
-          <p style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '8px' }}>
-            SurakshaSetu AI
-          </p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '340px', margin: '0 auto', lineHeight: 1.5 }}>
-            Comply • Prepare • Grow
-          </p>
-        </motion.div>
-      </div>
-    );
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setForgotLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await axios.post('http://localhost:5000/api/auth/reset-password', {
+        email: forgotEmail,
+        otp: forgotOtp,
+        newPassword
+      });
+      setSuccess('Password reset successful. You can sign in now.');
+      setShowForgot(false);
+      setForgotEmail(email);
+      setForgotOtp('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setOtpSent(false);
+      setOtpVerified(false);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Could not reset password.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const logoStyle: React.CSSProperties = {
+    width: '18px',
+    height: '18px',
+    display: 'block',
+    objectFit: 'contain',
+    filter: 'drop-shadow(0 0 0 rgba(77, 214, 154, 0))'
   };
 
   return (
     <div className="auth-split">
-      {/* Left Side: Form */}
       <div className="auth-split-left">
-        <motion.div 
+        <motion.div
           className="auth-form-container"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '48px' }}>
-            <div style={{ width: '10px', height: '10px', background: '#00E676', borderRadius: '2px', boxShadow: '0 0 12px rgba(0,230,118,0.4)' }} />
-            <span style={{ fontWeight: 700, fontSize: '1.25rem', letterSpacing: '-0.02em', color: '#fff' }}>SurakshaSetu AI</span>
+          <div className="login-brand-row">
+            <img src="/logo.svg" alt="SurakshaSetu AI logo" style={logoStyle} />
+            <span>SurakshaSetu AI</span>
           </div>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: '#fff', marginBottom: '8px' }}>
-              Sign in
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
-              Access your compliance dashboard.
-            </p>
+          <div className="login-header-block">
+            <h1>Sign in</h1>
+            <p>Access your compliance dashboard.</p>
           </div>
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="error-box"
-              style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', borderRadius: '8px', padding: '12px 16px', fontSize: '0.9rem', marginBottom: '24px' }}
             >
               <span style={{ marginRight: '8px' }}>⚠</span> {error}
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '8px' }}>Email address</label>
-              <input 
-                type="email" 
-                className="premium-input" 
-                placeholder="you@company.com" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                required 
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="success-box"
+              style={{ marginBottom: '18px' }}
+            >
+              <span style={{ marginRight: '8px' }}>✓</span> {success}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="login-field">
+              <label>Email address</label>
+              <input
+                type="email"
+                className="premium-input"
+                placeholder="test@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
               />
             </div>
-            
-            <div style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Password</label>
-                <a href="#" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Forgot password?</a>
+
+            <div className="login-field password-row">
+              <div className="login-password-head">
+                <label>Password</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgot(true);
+                    setForgotEmail(email);
+                    setError('');
+                    setSuccess('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    color: 'var(--accent)',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  Forgot password?
+                </button>
               </div>
-              <input 
-                type="password" 
-                className="premium-input" 
-                placeholder="••••••••" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                required 
+              <input
+                type="password"
+                className="premium-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
               />
             </div>
 
@@ -222,17 +271,128 @@ const Login = () => {
                 </>
               )}
             </button>
+
+            <button
+              type="button"
+              className="google-btn"
+              onClick={() => {
+                window.location.href = 'http://localhost:5000/api/auth/google';
+              }}
+            >
+              <span className="google-icon" aria-hidden="true"><GoogleGIcon /></span>
+              Continue with Google
+            </button>
           </form>
 
-          <div style={{ marginTop: '32px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Don't have an account? <Link to="/register" style={{ color: '#fff', fontWeight: 500, marginLeft: '4px' }}>Create one</Link>
+          <div className="login-signup-row">
+            Don't have an account? <Link to="/register">Create one</Link>
           </div>
         </motion.div>
       </div>
 
-      {/* Right Side: Brand Expression */}
+      {showForgot && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.55)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }} onClick={() => setShowForgot(false)}>
+          <div style={{
+            width: '100%',
+            maxWidth: '420px',
+            background: 'var(--bg-primary)',
+            border: '1px solid var(--border)',
+            borderRadius: '18px',
+            boxShadow: '0 20px 40px rgba(15, 23, 42, 0.2)',
+            padding: '24px',
+            color: 'var(--text-primary)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.35rem' }}>Reset password</h3>
+              <button type="button" onClick={() => setShowForgot(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '1.3rem', cursor: 'pointer' }}>×</button>
+            </div>
+
+            {!otpVerified ? (
+              <>
+                <div className="login-field" style={{ marginBottom: '16px' }}>
+                  <label>Email address</label>
+                  <input
+                    type="email"
+                    className="premium-input"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                {!otpSent ? (
+                  <button type="button" className="premium-btn" onClick={handleSendResetOtp} disabled={forgotLoading}>
+                    {forgotLoading ? 'Sending OTP...' : 'Send OTP'}
+                  </button>
+                ) : (
+                  <>
+                    <div className="login-field" style={{ marginBottom: '16px' }}>
+                      <label>OTP</label>
+                      <input
+                        type="text"
+                        className="premium-input"
+                        value={forgotOtp}
+                        onChange={(e) => setForgotOtp(e.target.value)}
+                        placeholder="Enter 6-digit OTP"
+                        maxLength={6}
+                      />
+                    </div>
+                    <button type="button" className="premium-btn" onClick={handleVerifyResetOtp} disabled={forgotLoading}>
+                      {forgotLoading ? 'Verifying...' : 'Verify OTP'}
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="login-field" style={{ marginBottom: '16px' }}>
+                  <label>New password</label>
+                  <input
+                    type="password"
+                    className="premium-input"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                <div className="login-field" style={{ marginBottom: '16px' }}>
+                  <label>Confirm password</label>
+                  <input
+                    type="password"
+                    className="premium-input"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+
+                <button type="button" className="premium-btn" onClick={handleResetPassword} disabled={forgotLoading}>
+                  {forgotLoading ? 'Resetting...' : 'Reset password'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="auth-split-right">
-        <SurakshaSetuBrand />
+        <div className="login-visual-wrap">
+          <div className="brand-illustration">
+            <img src="/logo.svg" alt="SurakshaSetu AI" />
+          </div>
+          <div className="brand-name-large">SurakshaSetu AI</div>
+          <div className="brand-tagline">Comply • Prepare • Grow</div>
+        </div>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ export default function WhatIfSimulator() {
   const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [simulatedChanges, setSimulatedChanges] = useState<any>({});
   const [history, setHistory] = useState<any[]>([]);
+  const [profileLoading, setProfileLoading] = useState(true);
   
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -32,8 +33,17 @@ export default function WhatIfSimulator() {
   const [aiAnswer, setAiAnswer] = useState("");
 
   useEffect(() => {
-    fetchProfile();
-    fetchHistory();
+    const loadSimulatorData = async () => {
+      setProfileLoading(true);
+      await Promise.allSettled([fetchProfile(), fetchHistory()]);
+      setProfileLoading(false);
+    };
+
+    if (token) {
+      loadSimulatorData();
+    } else {
+      setProfileLoading(false);
+    }
   }, [token]);
 
   const fetchProfile = async () => {
@@ -41,9 +51,12 @@ export default function WhatIfSimulator() {
       const res = await axios.get('http://localhost:5000/api/business/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCurrentProfile(res.data.data.profile || res.data.data);
-    } catch (err) {
-      console.error(err);
+      setCurrentProfile(res.data.data?.profile || res.data.data || null);
+      return res.data.data?.profile || res.data.data || null;
+    } catch (err: any) {
+      console.error('Failed to load simulator profile:', err);
+      setCurrentProfile(null);
+      return null;
     }
   };
 
@@ -52,9 +65,10 @@ export default function WhatIfSimulator() {
       const res = await axios.get('http://localhost:5000/api/simulator/history', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setHistory(res.data.data);
+      setHistory(res.data.data || []);
     } catch (err) {
       console.error(err);
+      setHistory([]);
     }
   };
 
@@ -136,7 +150,38 @@ export default function WhatIfSimulator() {
     }
   };
 
-  if (!currentProfile) return <AppLayout pageTitle="Simulator"><div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading profile...</div></AppLayout>;
+  if (profileLoading) {
+    return (
+      <AppLayout pageTitle="Simulator">
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <Loader2 className="spin" size={22} />
+            <span>Loading profile...</span>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!currentProfile) {
+    return (
+      <AppLayout pageTitle="Simulator">
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <h2 style={{ marginBottom: '12px', color: 'var(--text-primary)' }}>No business profile found</h2>
+          <p style={{ maxWidth: '520px', margin: '0 auto 20px', lineHeight: 1.6 }}>
+            The simulator needs an existing business profile before it can calculate compliance impact.
+          </p>
+          <button
+            onClick={() => window.location.href = '/onboarding'}
+            className="btn btn-primary"
+            style={{ padding: '12px 20px' }}
+          >
+            Complete Business Profile
+          </button>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout pageTitle="Compliance Simulator">

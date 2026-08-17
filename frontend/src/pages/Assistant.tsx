@@ -207,112 +207,173 @@ const Assistant = () => {
 
   return (
     <AppLayout pageTitle={t('topbar.assistant')}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: '#f5f7f6' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 0', display: 'flex', flexDirection: 'column' }}>
+          {messages.length === 0 ? (
+            <div className="fade-in" style={{ margin: 'auto auto 0', width: '100%', maxWidth: '780px', textAlign: 'center' }}>
+              <div
+                style={{
+                  width: '86px',
+                  height: '86px',
+                  margin: '0 auto 18px',
+                  borderRadius: '24px',
+                  background: 'linear-gradient(135deg, rgba(124, 211, 197, 0.18) 0%, rgba(147, 197, 253, 0.12) 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 12px 30px rgba(16, 185, 129, 0.12)',
+                  padding: '14px'
+                }}
+              >
+                <img src="/logo.svg" alt="SurakshaSetu AI logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </div>
 
-        {/* DISCLAIMER */}
-        <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderBottom: '1px solid rgba(245, 158, 11, 0.2)', padding: '12px 24px', fontSize: '0.85rem', color: 'var(--warning)', textAlign: 'center' }}>
-          <strong>{t('ai.disclaimer')} (Strictly bounded to GAWK deterministic rules)</strong>
-        </div>
+              <h2 style={{ margin: '0 0 10px', fontSize: '2.1rem', fontWeight: 700, color: '#1a1f36', letterSpacing: '-0.03em' }}>
+                {t('ai.welcome')}
+              </h2>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          {messages.length === 0 && (
-            <div className="fade-in" style={{ margin: 'auto', maxWidth: '600px', width: '100%', textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🤖</div>
-              <h2 style={{ marginBottom: '8px' }}>{t('ai.welcome')}</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
+              <p style={{ margin: '0 auto 26px', maxWidth: '560px', color: '#5a6b7d', fontSize: '1.05rem', lineHeight: 1.55 }}>
                 {t('ai.subtitle')}
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', textAlign: 'left' }}>
                 {suggestedQuestions.map((q, i) => (
-                  <button 
-                    key={i} 
-                    className="btn btn-outline hover:border-indigo-500 hover:bg-indigo-900/20 transition-colors" 
-                    style={{ whiteSpace: 'normal', height: 'auto', padding: '12px', textAlign: 'left', fontSize: '0.85rem', justifyContent: 'flex-start' }}
+                  <button
+                    key={i}
+                    type="button"
                     onClick={() => handleSend(q)}
+                    style={{
+                      border: '1px solid rgba(15, 23, 42, 0.08)',
+                      background: '#f4f6f5',
+                      color: '#1a1f36',
+                      borderRadius: '12px',
+                      padding: '18px 18px',
+                      fontSize: '0.98rem',
+                      fontWeight: 500,
+                      lineHeight: 1.5,
+                      whiteSpace: 'normal',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 1px 0 rgba(15, 23, 42, 0.02)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#edf5f3';
+                      e.currentTarget.style.borderColor = 'rgba(80, 200, 168, 0.35)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#f4f6f5';
+                      e.currentTarget.style.borderColor = 'rgba(15, 23, 42, 0.08)';
+                    }}
                   >
                     {q}
                   </button>
                 ))}
               </div>
             </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', maxWidth: '900px', width: '100%', margin: '0 auto' }}>
+              {messages.map(msg => (
+                <div key={msg.id} style={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div style={{
+                    maxWidth: '75%',
+                    background: msg.sender === 'user' ? '#5bc2a8' : (msg.error ? 'rgba(239, 68, 68, 0.08)' : '#ffffff'),
+                    color: msg.sender === 'user' ? '#ffffff' : (msg.error ? '#b91c1c' : '#1a1f36'),
+                    padding: '16px 18px',
+                    borderRadius: '14px',
+                    border: msg.sender === 'assistant' && !msg.error ? '1px solid rgba(15, 23, 42, 0.08)' : (msg.error ? '1px solid rgba(239, 68, 68, 0.25)' : 'none'),
+                    position: 'relative',
+                    boxShadow: '0 6px 18px rgba(15, 23, 42, 0.04)'
+                  }}>
+                    <div style={{ marginBottom: msg.businessMeaning || msg.recommendedAction || (msg.sources && msg.sources.length > 0) ? '16px' : '0', lineHeight: 1.6 }}>
+                      {msg.content}
+                    </div>
+
+                    {msg.businessMeaning && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <h4 style={{ fontSize: '0.8rem', color: '#5a6b7d', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Business Meaning</h4>
+                        <div style={{ fontSize: '0.92rem', color: '#343f51' }}>{msg.businessMeaning}</div>
+                      </div>
+                    )}
+
+                    {msg.recommendedAction && (
+                      <div style={{ marginBottom: '16px', background: 'rgba(34, 197, 94, 0.08)', padding: '12px 14px', borderRadius: '8px', borderLeft: '3px solid #3dc7a1' }}>
+                        <h4 style={{ fontSize: '0.8rem', color: '#0c8a68', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', margin: 0 }}>Recommended Action</h4>
+                        <div style={{ fontSize: '0.92rem', color: '#1a1f36' }}>{msg.recommendedAction}</div>
+                      </div>
+                    )}
+
+                    {msg.actionType === 'PREPARE_DOCUMENT' && msg.actionTarget && (
+                      <div style={{ marginBottom: '16px' }}>
+                        <button
+                          type="button"
+                          style={{
+                            border: 'none',
+                            borderRadius: '10px',
+                            background: '#57c6a6',
+                            color: '#fff',
+                            fontWeight: 600,
+                            padding: '10px 16px',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => navigate(`/document-preparation/${encodeURIComponent(msg.actionTarget!)}`)}
+                        >
+                          Prepare Document: {msg.actionTarget}
+                        </button>
+                      </div>
+                    )}
+
+                    {msg.sources && msg.sources.length > 0 && (
+                      <details style={{ background: 'rgba(15, 23, 42, 0.03)', padding: '8px 12px', borderRadius: '8px', marginBottom: '12px' }}>
+                        <summary style={{ cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#5a6b7d' }}>{t('ai.sources')}</summary>
+                        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {msg.sources.map((src, i) => (
+                            <div key={i} style={{ fontSize: '0.8rem', color: '#5a6b7d', borderLeft: '2px solid rgba(15, 23, 42, 0.1)', paddingLeft: '8px' }}>
+                              <div style={{ color: '#1a1f36', fontWeight: 600 }}>{src.ruleCode}</div>
+                              <div>Act: {src.act}</div>
+                              <div>Section: {src.section}</div>
+                              {src.officialUrl && <div><a href={src.officialUrl} target="_blank" rel="noreferrer" style={{ color: '#3b82f6' }}>Official Source</a></div>}
+                              {src.lastVerified && <div>Last Verified: {new Date(src.lastVerified).toLocaleDateString()}</div>}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+
+                    {msg.sender === 'assistant' && !msg.error && (
+                      <button
+                        type="button"
+                        onClick={() => toggleSpeak(msg)}
+                        style={{
+                          position: 'absolute',
+                          right: '-12px',
+                          top: '14px',
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          border: '1px solid rgba(15, 23, 42, 0.08)',
+                          background: '#fff',
+                          color: '#5a6b7d',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                        title={isSpeakingId === msg.id ? 'Stop reading' : 'Read aloud'}
+                        aria-label={isSpeakingId === msg.id ? 'Stop reading' : 'Read aloud'}
+                      >
+                        {isSpeakingId === msg.id ? <Square size={16} className="text-red-400 fill-red-400" /> : <Volume2 size={16} />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
-          {messages.map(msg => (
-            <div key={msg.id} style={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
-              <div style={{ 
-                maxWidth: '75%', 
-                background: msg.sender === 'user' ? 'var(--accent)' : (msg.error ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)'),
-                color: msg.sender === 'user' ? '#fff' : (msg.error ? 'var(--danger)' : 'var(--text-primary)'),
-                padding: '16px', 
-                borderRadius: '12px',
-                border: msg.sender === 'assistant' && !msg.error ? '1px solid var(--border)' : (msg.error ? '1px solid rgba(239, 68, 68, 0.3)' : 'none'),
-                position: 'relative'
-              }}>
-                <div style={{ marginBottom: msg.businessMeaning || msg.recommendedAction || (msg.sources && msg.sources.length > 0) ? '16px' : '0' }}>
-                  {msg.content}
-                </div>
-
-                {msg.businessMeaning && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Business Meaning</h4>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{msg.businessMeaning}</div>
-                  </div>
-                )}
-
-                {msg.recommendedAction && (
-                  <div style={{ marginBottom: '16px', background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '6px', borderLeft: '3px solid var(--success)' }}>
-                    <h4 style={{ fontSize: '0.85rem', color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', margin: 0 }}>Recommended Action</h4>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{msg.recommendedAction}</div>
-                  </div>
-                )}
-
-                {msg.actionType === 'PREPARE_DOCUMENT' && msg.actionTarget && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <button 
-                      className="btn btn-accent" 
-                      onClick={() => navigate(`/document-preparation/${encodeURIComponent(msg.actionTarget!)}`)}
-                    >
-                      Prepare Document: {msg.actionTarget}
-                    </button>
-                  </div>
-                )}
-
-                {msg.sources && msg.sources.length > 0 && (
-                  <details style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '6px', marginBottom: '12px' }}>
-                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('ai.sources')}</summary>
-                    <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {msg.sources.map((src, i) => (
-                        <div key={i} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderLeft: '2px solid var(--border)', paddingLeft: '8px' }}>
-                          <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{src.ruleCode}</div>
-                          <div>Act: {src.act}</div>
-                          <div>Section: {src.section}</div>
-                          {src.officialUrl && <div><a href={src.officialUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-light)' }}>Official Source</a></div>}
-                          {src.lastVerified && <div>Last Verified: {new Date(src.lastVerified).toLocaleDateString()}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-
-                {msg.sender === 'assistant' && !msg.error && (
-                  <button 
-                    onClick={() => toggleSpeak(msg)}
-                    className="absolute -right-12 top-4 p-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition-colors"
-                    title={isSpeakingId === msg.id ? "Stop reading" : "Read aloud"}
-                    aria-label={isSpeakingId === msg.id ? "Stop reading" : "Read aloud"}
-                  >
-                    {isSpeakingId === msg.id ? <Square size={18} className="text-red-400 fill-red-400" /> : <Volume2 size={18} />}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-
           {isTyping && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', gap: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-start', maxWidth: '900px', width: '100%', margin: '18px auto 0' }}>
+              <div style={{ background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1px solid rgba(15, 23, 42, 0.08)', display: 'flex', gap: '5px', boxShadow: '0 6px 18px rgba(15, 23, 42, 0.04)' }}>
                 <div className="dot" style={{ animation: 'pulse 1s infinite' }} />
                 <div className="dot" style={{ animation: 'pulse 1s infinite 0.2s' }} />
                 <div className="dot" style={{ animation: 'pulse 1s infinite 0.4s' }} />
@@ -321,44 +382,39 @@ const Assistant = () => {
           )}
 
           {voiceError && (
-            <div className="flex items-center gap-2 text-sm text-red-400 bg-red-900/20 border border-red-900/50 p-3 rounded-lg mx-auto w-fit">
+            <div style={{ margin: '12px auto 0', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.25)', background: 'rgba(239, 68, 68, 0.05)', color: '#b91c1c', fontSize: '0.9rem' }}>
               <AlertCircle size={16} />
               {voiceError}
             </div>
           )}
-          
+
           <div ref={chatEndRef} />
         </div>
 
-        <div style={{ padding: '24px', borderTop: '1px solid var(--border)', background: 'var(--bg-primary)' }}>
-          <form 
-            style={{ display: 'flex', gap: '12px', alignItems: 'center' }}
+        <div style={{ padding: '18px 24px 24px', background: 'rgba(255,255,255,0.15)' }}>
+          <form
+            style={{ display: 'flex', gap: '12px', alignItems: 'center', maxWidth: '1040px', margin: '0 auto' }}
             onSubmit={(e) => { e.preventDefault(); handleSend(inputValue); }}
           >
-            <button 
-              type="button"
-              className="btn btn-outline p-3 rounded-full hover:bg-gray-800" 
-              onClick={() => setMessages([])} 
-              disabled={messages.length === 0 || isTyping}
-              title={t('ui.clear')}
-              aria-label="Clear chat history"
-            >
-              🧹
-            </button>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <input 
-                type="text" 
+            <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+              <div style={{ position: 'absolute', left: '16px', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Mic size={18} />
+              </div>
+              <input
+                type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder={isListening ? "Listening..." : "Ask a compliance question by typing or speaking..."}
-                style={{ 
-                  width: '100%', 
-                  padding: '16px 24px', 
-                  borderRadius: '12px', 
-                  border: isListening ? '2px solid var(--accent)' : '1px solid var(--border)', 
-                  background: 'var(--bg-elevated)', 
-                  color: '#fff',
-                  transition: 'border 0.2s'
+                placeholder={isListening ? 'Listening...' : 'Type your compliance question...'}
+                style={{
+                  width: '100%',
+                  border: isListening ? '2px solid rgba(80, 200, 168, 0.8)' : '1px solid rgba(15, 23, 42, 0.1)',
+                  background: '#ffffff',
+                  color: '#1a1f36',
+                  borderRadius: '14px',
+                  padding: '16px 130px 16px 46px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  boxShadow: '0 1px 0 rgba(15, 23, 42, 0.02)'
                 }}
                 disabled={isTyping}
               />
@@ -366,15 +422,43 @@ const Assistant = () => {
                 type="button"
                 onClick={toggleListen}
                 disabled={isTyping}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
-                title={isListening ? "Stop voice input" : "Start voice input"}
-                aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                style={{
+                  position: 'absolute',
+                  right: '112px',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'transparent',
+                  color: isListening ? '#ef4444' : '#55657a',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title={isListening ? 'Stop voice input' : 'Start voice input'}
+                aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
               >
-                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
             </div>
-            <button type="submit" className="btn btn-accent px-8" disabled={!inputValue.trim() || isTyping}>
-              {isTyping ? <Loader2 size={20} className="spin" /> : t('ui.send')}
+
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || isTyping}
+              style={{
+                border: 'none',
+                borderRadius: '12px',
+                background: '#7fd8c5',
+                color: '#0d2d2a',
+                padding: '14px 28px',
+                fontWeight: 700,
+                cursor: !inputValue.trim() || isTyping ? 'not-allowed' : 'pointer',
+                opacity: !inputValue.trim() || isTyping ? 0.7 : 1,
+                minWidth: '120px'
+              }}
+            >
+              {isTyping ? <Loader2 size={18} className="spin" /> : t('ui.send')}
             </button>
           </form>
         </div>
