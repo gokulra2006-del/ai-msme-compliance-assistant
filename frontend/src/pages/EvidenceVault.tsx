@@ -5,6 +5,38 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import AppLayout from '../components/AppLayout';
 
+/** Finding severity → the badge classes the rest of this page already uses. */
+const DQ_SEVERITY_BADGE: Record<string, string> = {
+  HIGH: 'badge-red',
+  MEDIUM: 'badge-amber',
+  LOW: 'badge-muted'
+};
+
+/** `OBLIGATION_MISSING_EVIDENCE` → `Obligation missing evidence`. */
+const humanizeFindingCode = (code: string) =>
+  (code || '').toLowerCase().replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+
+/**
+ * One readable line per flagged record. The audit reports two record shapes —
+ * evidence references and required-document rows — so read whichever fields are
+ * present rather than assuming a single shape.
+ */
+const describeFindingRecord = (record: any): string => {
+  if (!record || typeof record !== 'object') return String(record ?? '');
+
+  const label =
+    record.documentName || record.documentType || record.obligationTitle || record.obligationCode || 'Record';
+
+  const context = [
+    record.documentType && record.documentType !== label ? record.documentType : null,
+    record.obligationTitle || record.obligationCode || null,
+    record.expiryDate ? `expired ${new Date(record.expiryDate).toLocaleDateString()}` : null,
+    Array.isArray(record.reasons) && record.reasons.length ? record.reasons.join('; ') : null
+  ].filter(Boolean);
+
+  return context.length ? `${label} — ${context.join(' · ')}` : label;
+};
+
 const EvidenceVault = () => {
   const { token, user, loading: authLoading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -81,6 +113,17 @@ const EvidenceVault = () => {
     }
   };
 
+  /**
+   * The single entry point for the upload drawer, so a stale error or success
+   * banner from an earlier attempt never greets a fresh one.
+   */
+  const openUpload = (prefill?: Partial<typeof uploadForm>) => {
+    setUploadError('');
+    setUploadSuccess('');
+    if (prefill) setUploadForm(prev => ({ ...prev, ...prefill }));
+    setShowUpload(true);
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadForm.file || !uploadForm.obligationCode || !uploadForm.documentType || !uploadForm.documentName) {
@@ -124,6 +167,9 @@ const EvidenceVault = () => {
           } catch (retryErr: any) {
             setUploadError(retryErr.response?.data?.error || 'Upload failed');
           }
+        } else {
+          // Declining the prompt is a decision, not a silent no-op - say what happened.
+          setUploadError('Upload cancelled. A similar document already exists, so nothing was saved.');
         }
       } else {
         setUploadError(err.response?.data?.error || 'Upload failed');
@@ -273,7 +319,7 @@ const EvidenceVault = () => {
     <AppLayout pageTitle={t('topbar.evidence', 'Evidence Vault')}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '16px' }}>
         <button className="btn btn-outline btn-sm" onClick={fetchDataQuality} disabled={dqLoading}>{dqLoading ? '...' : t('ui.audit', 'Data Quality Audit')}</button>
-        <button className="btn btn-accent btn-sm" onClick={() => setShowUpload(true)}>+ {t('ui.upload', 'Upload Document')}</button>
+        <button className="btn btn-accent btn-sm" onClick={() => openUpload()}>+ {t('ui.upload', 'Upload Document')}</button>
       </div>
       
       {uploadSuccess && <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--success)', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px', fontSize: '0.85rem' }}>{uploadSuccess}</div>}
@@ -328,7 +374,7 @@ const EvidenceVault = () => {
                       <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{doc.documentType}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Required for: {doc.obligationTitle}</div>
                     </div>
-                    <button className="btn btn-accent btn-sm" onClick={() => { setUploadForm({ ...uploadForm, obligationCode: doc.obligationCode, documentType: doc.documentType, documentName: doc.documentType }); setShowUpload(true); }}>{t('ui.upload')}</button>
+                    <button className="btn btn-accent btn-sm" onClick={() => openUpload({ obligationCode: doc.obligationCode, documentType: doc.documentType, documentName: doc.documentType })}>{t('ui.upload')}</button>
                   </div>
                 ))}
               </div>
@@ -381,7 +427,7 @@ const EvidenceVault = () => {
                       <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{doc.expiryDate ? new Date(doc.expiryDate).toLocaleDateString() : '—'}</td>
                       <td>
                         {doc.status === 'MISSING' ? (
-                          <button className="btn btn-accent btn-sm" onClick={() => { setUploadForm({ ...uploadForm, obligationCode: doc.obligationCode, documentType: doc.documentType, documentName: doc.documentType }); setShowUpload(true); }}>{t('ui.upload')}</button>
+                          <button className="btn btn-accent btn-sm" onClick={() => openUpload({ obligationCode: doc.obligationCode, documentType: doc.documentType, documentName: doc.documentType })}>{t('ui.upload')}</button>
                         ) : (
                           <div style={{ display: 'flex', gap: '6px' }}>
                             {doc.evidenceId && <button className="btn btn-outline btn-sm" onClick={() => handleViewFile(doc.evidenceId, doc.documentType)}>View</button>}
@@ -650,19 +696,45 @@ const EvidenceVault = () => {
             </div>
             <div style={{ padding: '24px' }}>
               <div className="card" style={{ marginBottom: '16px', background: 'var(--bg-primary)' }}>
-                <h3 style={{ margin: '0 0 8px 0' }}>{t('audit.findings', 'Findings')} ({dataQuality?.totalFindings || 0})</h3>
+                <h3 style={{ margin: '0 0 4px 0' }}>{t('audit.findings', 'Findings')} ({dataQuality?.totalFindings || 0})</h3>
                 {dataQuality?.findings?.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {dataQuality.findings.map((f: any, i: number) => (
-                      <li key={i}>
-                        <strong>{f.issue}</strong>: {f.detail}
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <p style={{ margin: '0 0 16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {dataQuality.totalFindings} record{dataQuality.totalFindings === 1 ? '' : 's'} flagged across{' '}
+                      {dataQuality.findings.length} check{dataQuality.findings.length === 1 ? '' : 's'}.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {dataQuality.findings.map((f: any, i: number) => (
+                        <div key={f.issue || i} style={{ padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                            <span className={`badge ${DQ_SEVERITY_BADGE[f.severity] || 'badge-muted'}`}>{f.severity}</span>
+                            <strong style={{ fontSize: '0.9rem' }}>{humanizeFindingCode(f.issue)}</strong>
+                            <span className="badge badge-muted">{f.count}</span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
+                            {f.description}
+                          </p>
+                          {Array.isArray(f.records) && f.records.length > 0 && (
+                            <ul style={{ margin: '10px 0 0', paddingLeft: '20px', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {f.records.slice(0, 10).map((record: any, j: number) => (
+                                <li key={j}>{describeFindingRecord(record)}</li>
+                              ))}
+                              {f.records.length > 10 && (
+                                <li>…and {f.records.length - 10} more</li>
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
-                  <p style={{ color: 'var(--success)' }}>{t('audit.no_issues', 'No data quality issues found.')}</p>
+                  <p style={{ color: 'var(--success)', margin: '8px 0 0' }}>{t('audit.no_issues', 'No data quality issues found.')}</p>
                 )}
               </div>
+              {dataQuality?.notice && (
+                <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.5, color: 'var(--text-muted)' }}>{dataQuality.notice}</p>
+              )}
             </div>
           </div>
         </>

@@ -112,6 +112,9 @@ async function buildRequirementCatalogue(business) {
       documentType,
       severity: rule?.severity || extra.severity || null,
       domain: rule?.complianceDomain || extra.domain || null,
+      // The rule's own cadence, read as-is. Null when the rule does not state
+      // one — the UI reports the gap rather than assuming a renewal period.
+      complianceFrequency: rule?.complianceFrequency || null,
       dueDate: extra.dueDate || null,
       assignedTo: extra.assignedTo || null,
       actionId: extra.actionId || null,

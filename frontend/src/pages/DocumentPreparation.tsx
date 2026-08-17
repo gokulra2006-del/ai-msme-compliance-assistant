@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import AppLayout from '../components/AppLayout';
+import { FileText, Edit3, Hourglass, CheckCircle, Search, Plus, Lightbulb, MessageSquare, ArrowRight } from 'lucide-react';
 
 const API = 'http://localhost:5000/api';
 
@@ -157,35 +158,110 @@ const DocumentPreparation = () => {
   if (!obligationCode) {
     if (loading) return <div className="page-loading">{t('loading', 'Loading…')}</div>;
     return (
-      <AppLayout pageTitle={t('documents.title', 'Document Preparation')}>
-        <div className="document-preparation">
-          <h1 className="page-title">{t('documents.dashboard', 'Document Preparation Dashboard')}</h1>
-          {error && <div className="error-box" role="alert">{error}</div>}
-          
-          <div className="metrics-grid">
-            <div className="metric-card">
-              <span className="metric-value">{dashboardData?.actions?.length || 0}</span>
-              <span className="metric-label">Documents Needed</span>
+      <AppLayout pageTitle={t('documents.title', 'Document Preparation')} fullBleed={true}>
+        <div className="doc-prep-dash">
+          <div className="doc-prep-dash__top">
+            <div className="doc-prep-dash__header">
+              <div className="doc-prep-dash__title-group">
+                <h1 className="page-title">{t('documents.dashboard', 'Document Preparation Dashboard')}</h1>
+              <p className="page-subtitle">Draft, manage, and prepare official documents in a few simple steps.</p>
             </div>
-            <div className="metric-card">
-              <span className="metric-value">{dashboardData?.draftsInProgress?.length || 0}</span>
-              <span className="metric-label">Drafts In Progress</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-value">{dashboardData?.awaitingReview?.length || 0}</span>
-              <span className="metric-label">Awaiting Review</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-value">{dashboardData?.approvedDocuments?.length || 0}</span>
-              <span className="metric-label">Approved</span>
+            <div className="doc-prep-dash__how-it-works">
+              <div className="doc-prep-dash__how-icon-bg">
+                <FileText size={22} className="doc-prep-dash__how-icon-main" />
+                <div className="doc-prep-dash__how-check"><CheckCircle size={14} fill="#10b981" color="#fff" /></div>
+              </div>
+              <div className="doc-prep-dash__how-text">
+                <strong>How it works</strong>
+                <p>We guide you step-by-step to collect information, draft your document using AI, and export it for submission.</p>
+              </div>
+              <ArrowRight size={18} className="doc-prep-dash__how-arrow" />
             </div>
           </div>
 
-          <section className="card" style={{ marginTop: '20px' }}>
-            <h2 className="card-title">Obligations Requiring Documents</h2>
-            {dashboardData?.actions?.length ? (
-              <div className="table-wrap">
-                <table>
+          {error && <div className="error-box" role="alert">{error}</div>}
+
+          <div className="doc-prep-dash__metrics">
+            <div className="doc-prep-dash__metric">
+              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--green"><FileText size={22} /></div>
+              <div className="doc-prep-dash__metric-info">
+                <span className="doc-prep-dash__metric-value">{dashboardData?.actions?.length || 0}</span>
+                <span className="doc-prep-dash__metric-label">Documents Needed</span>
+                <span className="doc-prep-dash__metric-sub">Pending preparation</span>
+              </div>
+            </div>
+            <div className="doc-prep-dash__metric">
+              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--orange"><Edit3 size={22} /></div>
+              <div className="doc-prep-dash__metric-info">
+                <span className="doc-prep-dash__metric-value">{dashboardData?.draftsInProgress?.length || 0}</span>
+                <span className="doc-prep-dash__metric-label">Drafts In Progress</span>
+                <span className="doc-prep-dash__metric-sub">Continue where you left off</span>
+              </div>
+            </div>
+            <div className="doc-prep-dash__metric">
+              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--blue"><Hourglass size={22} /></div>
+              <div className="doc-prep-dash__metric-info">
+                <span className="doc-prep-dash__metric-value">{dashboardData?.awaitingReview?.length || 0}</span>
+                <span className="doc-prep-dash__metric-label">Awaiting Review</span>
+                <span className="doc-prep-dash__metric-sub">Ready for your review</span>
+              </div>
+            </div>
+            <div className="doc-prep-dash__metric">
+              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--darkgreen"><CheckCircle size={22} /></div>
+              <div className="doc-prep-dash__metric-info">
+                <span className="doc-prep-dash__metric-value">{dashboardData?.approvedDocuments?.length || 0}</span>
+                <span className="doc-prep-dash__metric-label">Approved</span>
+                <span className="doc-prep-dash__metric-sub">Ready to download</span>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <div className="doc-prep-dash__scrollable">
+            <section className="doc-prep-dash__main card">
+              <div className="doc-prep-dash__main-header">
+              <div className="doc-prep-dash__main-title-group">
+                <h2 className="card-title">My Document Dashboard</h2>
+                <p className="doc-prep-dash__main-sub">Track your documents across all stages of preparation.</p>
+              </div>
+              <div className="doc-prep-dash__main-controls">
+                <div className="doc-prep-dash__search">
+                  <Search size={16} />
+                  <input type="text" placeholder="Search documents..." />
+                </div>
+                <select className="doc-prep-dash__status-select">
+                  <option>All Status</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="doc-prep-dash__pills">
+              <button className="doc-prep-dash__pill active">All</button>
+              <button className="doc-prep-dash__pill">Documents Needed</button>
+              <button className="doc-prep-dash__pill">Drafts In Progress</button>
+              <button className="doc-prep-dash__pill">Awaiting Review</button>
+              <button className="doc-prep-dash__pill">Approved</button>
+            </div>
+
+            {/* Empty State when no documents */}
+            {(!dashboardData?.actions?.length) ? (
+              <div className="doc-prep-dash__empty">
+                <div className="doc-prep-dash__empty-icon">
+                  <div className="doc-prep-dash__empty-folder">
+                    <FileText size={32} className="doc-prep-dash__empty-file" />
+                    <div className="doc-prep-dash__empty-sparkles">✨</div>
+                  </div>
+                </div>
+                <h3 className="doc-prep-dash__empty-title">No documents yet</h3>
+                <p className="doc-prep-dash__empty-desc">You're all set! When the Assistant identifies documents you need,<br/>they will appear here for you to prepare.</p>
+                <button className="btn btn-accent doc-prep-dash__empty-btn" onClick={() => navigate('/obligations')}>
+                  <Plus size={16} /> Create New Document
+                </button>
+                <a href="#" className="doc-prep-dash__empty-link">Learn more about document preparation &rarr;</a>
+              </div>
+            ) : (
+              <div className="table-wrap doc-prep-dash__table-wrap">
+                <table className="doc-prep-dash__table">
                   <thead><tr><th>Obligation</th><th>Status</th><th>Actions</th></tr></thead>
                   <tbody>
                     {dashboardData.actions.map((action: any) => (
@@ -198,8 +274,22 @@ const DocumentPreparation = () => {
                   </tbody>
                 </table>
               </div>
-            ) : <p className="empty-state">No required documents found.</p>}
+            )}
           </section>
+          </div>
+
+          <div className="doc-prep-dash__bottom">
+            <div className="doc-prep-dash__help-banner">
+              <div className="doc-prep-dash__help-icon"><Lightbulb size={24} /></div>
+              <div className="doc-prep-dash__help-text">
+                <strong>Need help getting started?</strong>
+                <p>The Assistant can help identify the documents you need based on your business profile and guide you through the preparation process.</p>
+              </div>
+              <button className="btn btn-outline doc-prep-dash__help-btn" onClick={() => navigate('/assistant')}>
+                <MessageSquare size={16} /> Ask the Assistant
+              </button>
+            </div>
+          </div>
         </div>
       </AppLayout>
     );

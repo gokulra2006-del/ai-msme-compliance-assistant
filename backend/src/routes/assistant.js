@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { chat } = require('../controllers/assistantController');
+const { chat, classifyDocument } = require('../controllers/assistantController');
 const { protect } = require('../middleware/auth');
 const rateLimit = require('express-rate-limit');
 
@@ -15,5 +15,6 @@ const assistantLimiter = rateLimit({
 });
 
 router.post('/chat', protect, assistantLimiter, chat);
+router.post('/classify-document', protect, classifyDocument);
 
 module.exports = router;

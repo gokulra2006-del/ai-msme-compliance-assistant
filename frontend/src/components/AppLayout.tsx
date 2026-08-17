@@ -11,9 +11,15 @@ interface AppLayoutProps {
   children: ReactNode;
   pageTitle?: string;
   userData?: any; // For topbar (industry, state)
+  /**
+   * Hands the page the exact remaining viewport height with no padding of its
+   * own, so it can dock a footer (a chat composer, an action bar) to the bottom
+   * edge. Normal pages leave this off and scroll the document as usual.
+   */
+  fullBleed?: boolean;
 }
 
-export default function AppLayout({ children, pageTitle, userData }: AppLayoutProps) {
+export default function AppLayout({ children, pageTitle, userData, fullBleed }: AppLayoutProps) {
   const { user, logout } = useContext(AuthContext);
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -285,7 +291,7 @@ export default function AppLayout({ children, pageTitle, userData }: AppLayoutPr
           </div>
         </header>
 
-        <div className="page fade-in">
+        <div className={`page ${fullBleed ? 'page--app' : ''} fade-in`}>
           {children}
         </div>
       </div>

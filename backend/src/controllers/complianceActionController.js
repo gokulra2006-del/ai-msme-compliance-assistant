@@ -34,8 +34,10 @@ exports.syncActions = async (req, res) => {
     const business = await EvidenceIntelligence.resolveBusinessForUser(req.user);
     if (!business) return res.status(200).json({ success: true, message: 'No business found' });
 
-    // 1. Sync from Rules Engine
-    const allRules = await ComplianceRule.find({ active: true });
+    // 1. Sync from Rules Engine. The lifecycle field is `status` — an `active`
+    // boolean does not exist on ComplianceRule, so the old query matched nothing
+    // and no action (and therefore no due date) was ever synced.
+    const allRules = await ComplianceRule.find({ status: 'ACTIVE' });
     const evaluated = evaluateRules(business.toObject(), allRules);
 
     for (const e of evaluated) {

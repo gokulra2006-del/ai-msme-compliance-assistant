@@ -140,7 +140,7 @@ exports.getAdminMetrics = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const activeBusinesses = await Business.countDocuments();
-    const totalRules = await ComplianceRule.countDocuments({ active: true });
+    const totalRules = await ComplianceRule.countDocuments({ status: 'ACTIVE' });
     
     // Recent audit events
     const recentActivity = await AuditLog.find()

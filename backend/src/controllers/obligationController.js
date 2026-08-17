@@ -8,9 +8,12 @@ const { evaluateRules } = require('../engine/rulesEngine');
 exports.getObligations = async (req, res) => {
   try {
     const business = await Business.findOne({ user: req.user.id });
-    
-    // Fetch all active rules from DB
-    const allRules = await ComplianceRule.find({ active: true });
+
+    // Fetch all active rules from DB. ComplianceRule tracks its lifecycle in
+    // `status` (DRAFT|ACTIVE|INACTIVE|EXPIRED|ARCHIVED) — there is no `active`
+    // boolean on the schema, so querying one matched nothing and this endpoint
+    // returned an empty obligation list for every business.
+    const allRules = await ComplianceRule.find({ status: 'ACTIVE' });
 
     if (!business) {
       // No business profile yet — return all rules as INSUFFICIENT_DATA
@@ -28,7 +31,6 @@ exports.getObligations = async (req, res) => {
           penalty: r.penaltyDescription,
           imprisonmentFlag: r.imprisonmentRisk,
           licenceSuspensionFlag: r.licenseSuspensionRisk,
-          requiredEvidenceTypes: r.requiredEvidence,
           requiredEvidenceTypes: r.requiredEvidence,
           status: 'INSUFFICIENT_DATA',
           applicability: 'INSUFFICIENT_DATA'
@@ -62,7 +64,8 @@ exports.getObligation = async (req, res) => {
 exports.getDashboard = async (req, res) => {
   try {
     const business = await Business.findOne({ user: req.user.id });
-    const allRules = await ComplianceRule.find({ active: true });
+    // See getObligations — the lifecycle field is `status`, not `active`.
+    const allRules = await ComplianceRule.find({ status: 'ACTIVE' });
 
     let applies = 0, doesNotApply = 0, insufficientData = 0;
     let critical = 0, high = 0, medium = 0, low = 0;

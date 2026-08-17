@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,115 @@ import { useLanguage } from '../context/LanguageContext';
 import type { Language } from '../context/LanguageContext';
 import { State, City } from 'country-state-city';
 import indianDistricts from '../data/indianDistricts.json';
+import {
+  parseCompanyImport,
+  GSTIN_PATTERN,
+  ENTITY_TYPES,
+  TURNOVER_BANDS,
+  INDUSTRIES,
+  FOOD_CATEGORIES
+} from '../data/companyImport';
+import type { ImportResult } from '../data/companyImport';
+import { Upload, FileText, Loader2 } from 'lucide-react';
+
+const API = 'http://localhost:5000/api';
+
+/**
+ * Shown as the placeholder and filled in by "Fill in an example". One constant
+ * for both, so the sample the hint promises is exactly the sample the button
+ * pastes.
+ */
+const EXAMPLE_IMPORT = [
+  'GSTIN: 27AAACR5055K1Z5',
+  'State: Maharashtra',
+  'Industry: Food Processing',
+  'Annual Turnover: 5-50Cr'
+].join('\n');
+
+/**
+ * The profile fields this wizard owns, and the shape the deterministic engine
+ * reads. Declared at module scope for two reasons: the payload sent to the API
+ * can be narrowed to exactly these keys, and the list cannot drift from the
+ * form's own initial state.
+ */
+const INITIAL_FORM = {
+  // Step 1: Business Basics
+  entityType: '',
+  industry: '',
+  subIndustry: '',
+  foodProductCategory: '',
+  annualTurnoverBand: '',
+
+  // Step 2: Location & Registration
+  state: '',
+  district: '',
+  city: '',
+  municipality: '',
+  gstRegistrationStatus: null as boolean | null,
+  gstin: '',
+  udyamRegistrationStatus: null as boolean | null,
+  udyamRegistration: '',
+
+  // Step 3: Workforce & Operations
+  totalWorkers: 0,
+  onRollWorkers: 0,
+  contractWorkers: 0,
+  womenWorkers: 0,
+
+  // Operations (boolean|null for tristate)
+  factoryStatus: null as boolean | null,
+  nightShift: null as boolean | null,
+  boiler: null as boolean | null,
+  coldStorage: null as boolean | null,
+  effluent: null as boolean | null,
+  hazardousWaste: null as boolean | null,
+  plasticPackaging: null as boolean | null,
+  packagedRetail: null as boolean | null,
+  dairy: null as boolean | null,
+  importActivity: null as boolean | null,
+  exportActivity: null as boolean | null,
+  ecommerceActivity: null as boolean | null,
+  commercialEstablishmentStatus: null as boolean | null
+};
+
+type ProfileForm = typeof INITIAL_FORM;
+
+const PROFILE_FIELDS = Object.keys(INITIAL_FORM) as Array<keyof ProfileForm>;
+
+/**
+ * Narrows an object to the profile fields alone. The saved Business document is
+ * merged into the form on load, which brings `_id`, `user`, `__v` and
+ * `applicableObligations` with it; posting those back is rejected by Mongoose.
+ */
+const toProfilePayload = (source: Record<string, any>): Record<string, any> => {
+  const payload: Record<string, any> = {};
+  PROFILE_FIELDS.forEach(field => {
+    const value = source[field as string];
+    // `null` is meaningful — it is the tri-state "unknown", which the engine
+    // reads as INSUFFICIENT_DATA rather than as a negative answer. Only
+    // genuinely absent keys are dropped.
+    if (value !== undefined) payload[field as string] = value;
+  });
+  return payload;
+};
+
+/**
+ * The checks the API enforces as well, applied before any save so an invalid
+ * paste is reported here instead of coming back as a 400.
+ */
+const validateProfile = (data: ProfileForm): string | null => {
+  if (data.gstin && !GSTIN_PATTERN.test(data.gstin)) return 'Invalid GSTIN format.';
+  if (data.totalWorkers < 0 || data.contractWorkers < 0) return 'Worker counts cannot be negative.';
+  if (data.contractWorkers > data.totalWorkers) return 'Contract workers cannot exceed total workers.';
+  return null;
+};
+
+/** What the engine reports after evaluating the saved profile. */
+interface EngineSummary {
+  applies: number;
+  insufficientData: number;
+  total: number;
+}
 
 const Onboarding = () => {
   const { token } = useContext(AuthContext);
@@ -14,59 +123,217 @@ const Onboarding = () => {
   const [step, setStep] = useState(0); // Step 0 is Language Selection
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [companyImportText, setCompanyImportText] = useState('');
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [engineResult, setEngineResult] = useState<EngineSummary | null>(null);
 
-  const [form, setForm] = useState({
-    // Step 1: Business Basics
-    entityType: '',
-    industry: '',
-    subIndustry: '',
-    foodProductCategory: '',
-    annualTurnoverBand: '',
-    
-    // Step 2: Location & Registration
-    state: '',
-    district: '',
-    city: '',
-    municipality: '',
-    gstRegistrationStatus: null as boolean | null,
-    gstin: '',
-    udyamRegistrationStatus: null as boolean | null,
-    udyamRegistration: '',
+  const [form, setForm] = useState<ProfileForm>(INITIAL_FORM);
 
-    // Step 3: Workforce & Operations
-    totalWorkers: 0,
-    onRollWorkers: 0,
-    contractWorkers: 0,
-    womenWorkers: 0,
-    
-    // Operations (boolean|null for tristate)
-    factoryStatus: null as boolean | null,
-    nightShift: null as boolean | null,
-    boiler: null as boolean | null,
-    coldStorage: null as boolean | null,
-    effluent: null as boolean | null,
-    hazardousWaste: null as boolean | null,
-    plasticPackaging: null as boolean | null,
-    packagedRetail: null as boolean | null,
-    dairy: null as boolean | null,
-    importActivity: null as boolean | null,
-    exportActivity: null as boolean | null,
-    ecommerceActivity: null as boolean | null,
-    commercialEstablishmentStatus: null as boolean | null,
-  });
+  // File upload for Import data
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [fileUploading, setFileUploading] = useState(false);
+
+  /**
+   * Reads a file the user selected, extracts its text, and feeds it into
+   * the existing parseCompanyImport() pipeline. Supports PDF (text-only),
+   * plain text, JSON, and DOCX (extracted as raw XML text, which still
+   * contains the key-value content the parser needs).
+   */
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadedFileName(file.name);
+    setFileUploading(true);
+    setError('');
+    try {
+      const text = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve((ev.target?.result as string) || '');
+        reader.onerror = () => reject(new Error('Could not read file.'));
+        // PDF: read as text (works for text-based PDFs; binary PDFs return garbled but parser handles gracefully)
+        reader.readAsText(file);
+      });
+      setCompanyImportText(text.slice(0, 4000)); // Show a snippet in the textarea
+      await applyCompanyImport(text);
+    } catch (err: any) {
+      setError('Could not read the file. Please paste the details manually.');
+    } finally {
+      setFileUploading(false);
+      // Reset the input so the same file can be re-uploaded if needed
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  /**
+   * Latest form value, readable after an `await` without going stale. Import
+   * saves to the server, so it must merge into the profile that has actually
+   * loaded — not into whatever this closure captured.
+   */
+  const formRef = useRef(form);
+  formRef.current = form;
+
+  /** Resolves once the saved profile has been loaded (or confirmed absent). */
+  const profileLoad = useRef<Promise<void> | null>(null);
+
+  /**
+   * What the saved profile contained, captured synchronously. Awaiting the load
+   * guarantees the response arrived, but not that React has committed the
+   * resulting setForm — so the merge reads this rather than trusting timing.
+   */
+  const loadedProfile = useRef<Partial<ProfileForm>>({});
 
   const update = (field: string, value: any) => setForm((prev: any) => ({ ...prev, [field]: value }));
+
+  // Derived state for dropdowns
+  const indianStates = State.getStatesOfCountry('IN');
+
+  /**
+   * Saves the profile through the existing endpoint pair — POST creates, PUT
+   * updates when one already exists. Both the wizard's Complete Profile button
+   * and the importer call this, so there is exactly one save path and one place
+   * the deterministic engine receives data from.
+   */
+  const persistProfile = async (data: ProfileForm) => {
+    const payload = toProfilePayload(data);
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      await axios.post(`${API}/business`, payload, { headers });
+    } catch (e: any) {
+      if (e.response?.status === 400 && e.response?.data?.error?.includes('already exists')) {
+        await axios.put(`${API}/business`, payload, { headers });
+      } else {
+        throw e;
+      }
+    }
+  };
+
+  /**
+   * Reads back what the engine now concludes. This is the check that the import
+   * actually reached it: the counts come from a fresh evaluation of the *saved*
+   * profile against the ACTIVE ruleset, not from anything held in this page.
+   */
+  const fetchEngineSummary = async (): Promise<EngineSummary | null> => {
+    const res = await axios.get(`${API}/obligations/dashboard`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const d = res.data?.data;
+    if (!d) return null;
+    return {
+      applies: d.applies ?? 0,
+      insufficientData: d.insufficientData ?? 0,
+      total: d.totalObligations ?? 0
+    };
+  };
+
+  /**
+   * Resolves the pasted details against the same option lists the dropdowns
+   * render, merges what resolved into the form, then saves so the deterministic
+   * engine recalculates from it. Filling the form alone was the bug: the engine
+   * evaluates the saved Business document, so an unsaved import changed nothing.
+   *
+   * The paste is left in the box so a wrong key or value can be corrected and
+   * re-imported.
+   */
+  const applyCompanyImport = async (rawData: string) => {
+    // The placeholder renders the example in grey, which reads as filled-in
+    // content. Disabling the button on an empty box therefore looked like a
+    // broken button rather than an empty input — so say what is missing instead.
+    if (!rawData.trim()) {
+      setImportResult(null);
+      setEngineResult(null);
+      setError('Paste your company details into the box first, then press Import data.');
+      return;
+    }
+
+    const result = parseCompanyImport(rawData, {
+      stateNames: indianStates.map(s => s.name),
+      districtsForState: (state) => (indianDistricts as Record<string, string[]>)[state] || [],
+      citiesForState: (state) => {
+        const stateObj = indianStates.find(s => s.name === state);
+        return stateObj ? (City.getCitiesOfState('IN', stateObj.isoCode) || []).map(c => c.name) : [];
+      }
+    });
+
+    setImportResult(result);
+    setEngineResult(null);
+
+    if (result.error) {
+      setError(`Unable to import company details. ${result.error}`);
+      return;
+    }
+    setError('');
+
+    // Wait for the saved profile to be in the form before merging on top of it.
+    // Import writes to the server, so merging into the blank defaults mid-load
+    // would save those blanks over a profile that already exists.
+    if (profileLoad.current) {
+      try {
+        await profileLoad.current;
+      } catch {
+        /* Already logged in the effect; a missing profile is a valid state. */
+      }
+    }
+
+    // Merge first, so the fields show the paste even if the save then fails.
+    // Only resolved values are present, so nothing valid is overwritten with
+    // undefined. Fields still sitting at their untouched default take the saved
+    // value, so a load React has not committed yet is never saved away — while
+    // anything the user actually edited is left alone.
+    const base: ProfileForm = { ...formRef.current };
+    (Object.keys(loadedProfile.current) as Array<keyof ProfileForm>).forEach(key => {
+      if (base[key] === INITIAL_FORM[key]) (base as any)[key] = loadedProfile.current[key];
+    });
+
+    const merged: ProfileForm = { ...base, ...(result.values as Partial<ProfileForm>) };
+    setForm(merged);
+
+    const invalid = validateProfile(merged);
+    if (invalid) {
+      setError(`Imported into the form, but not saved — ${invalid}`);
+      return;
+    }
+
+    setImporting(true);
+    try {
+      await persistProfile(merged);
+      setEngineResult(await fetchEngineSummary());
+    } catch (err: any) {
+      setError(
+        `Imported into the form, but saving failed. ${err.response?.data?.error || err.message}`
+      );
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  /**
+   * The report renders only when it has something to say. A failed parse is
+   * already surfaced through `error`, and a paste whose keys all carried empty
+   * values would otherwise leave an empty panel behind.
+   */
+  const importReport =
+    importResult &&
+    !importResult.error &&
+    (importResult.filled.length > 0 ||
+      importResult.unresolved.length > 0 ||
+      importResult.unknownKeys.length > 0 ||
+      importResult.warnings.length > 0)
+      ? importResult
+      : null;
 
   React.useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/business', {
+        const res = await axios.get(`${API}/business`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data && res.data.data) {
-          // Merge existing data into form
-          const d = res.data.data;
-          setForm(prev => ({ ...prev, ...d }));
+          // Merge the saved profile in, narrowed to the fields this form owns.
+          const saved = toProfilePayload(res.data.data) as Partial<ProfileForm>;
+          loadedProfile.current = saved;
+          setForm(prev => ({ ...prev, ...saved }));
         }
       } catch (err: any) {
         // If 404, they don't have a profile yet, which is fine
@@ -75,12 +342,10 @@ const Onboarding = () => {
         }
       }
     };
-    if (token) fetchProfile();
+    // Held so import can wait for it before writing back (see applyCompanyImport).
+    if (token) profileLoad.current = fetchProfile();
   }, [token]);
 
-  // Derived state for dropdowns
-  const indianStates = State.getStatesOfCountry('IN');
-  
   const [districts, setDistricts] = useState<string[]>([]);
   const [cities, setCities] = useState<any[]>([]);
 
@@ -129,11 +394,10 @@ const Onboarding = () => {
   const validateStep = () => {
     setError('');
     if (step === 2) {
-      if (form.gstRegistrationStatus && form.gstin) {
-        if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(form.gstin)) {
-          setError('Invalid GSTIN format.');
-          return false;
-        }
+      // Same pattern the API checks against, imported rather than repeated.
+      if (form.gstin && !GSTIN_PATTERN.test(form.gstin)) {
+        setError('Invalid GSTIN format.');
+        return false;
       }
     }
     if (step === 3) {
@@ -157,23 +421,11 @@ const Onboarding = () => {
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
-    
+
     setLoading(true);
     setError('');
     try {
-      try {
-        await axios.post('http://localhost:5000/api/business', form, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      } catch (e: any) {
-        if (e.response?.status === 400 && e.response?.data?.error?.includes('already exists')) {
-          await axios.put('http://localhost:5000/api/business', form, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-        } else {
-          throw e;
-        }
-      }
+      await persistProfile(form);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save profile');
@@ -195,6 +447,142 @@ const Onboarding = () => {
 
         <h1 className="page-title">{t('onboarding.title', 'Set up your business profile')}</h1>
         <p className="page-subtitle">{t('onboarding.subtitle', 'The deterministic engine uses this data to calculate your exact compliance obligations.')}</p>
+
+        <div className="card" style={{ marginBottom: '24px', padding: '18px 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0 }}>Import company details</h3>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Hidden file input — triggered by the Import data button */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.txt,.json,.docx,.doc,.csv"
+                style={{ display: 'none' }}
+                onChange={handleFileUpload}
+                aria-label="Upload company details file"
+              />
+              <button
+                className="btn btn-outline btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing || fileUploading}
+                title="Upload a PDF, TXT, JSON or DOCX file with your company details"
+              >
+                {fileUploading ? (
+                  <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Reading file…</>
+                ) : (
+                  <><Upload size={14} /> Upload file</>
+                )}
+              </button>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => applyCompanyImport(companyImportText)}
+                disabled={importing || fileUploading}
+              >
+                {importing ? 'Importing…' : 'Import data'}
+              </button>
+            </div>
+          </div>
+
+          {/* Uploaded file indicator */}
+          {uploadedFileName && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', padding: '8px 10px', background: '#f0f9f7', border: '1px solid rgba(80,200,168,0.3)', borderRadius: '6px', fontSize: '0.83rem', color: '#1a1f36' }}>
+              <FileText size={14} color="#50c8a8" />
+              <span>Uploaded: <strong>{uploadedFileName}</strong></span>
+              <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }} onClick={() => { setUploadedFileName(null); setCompanyImportText(''); }} title="Remove file">&times;</button>
+            </div>
+          )}
+          <textarea
+            className="form-input"
+            rows={4}
+            value={companyImportText}
+            onChange={(e) => setCompanyImportText(e.target.value)}
+            placeholder={`Paste company details like:\n${EXAMPLE_IMPORT}`}
+            style={{ resize: 'vertical' }}
+          />
+          <p style={{ margin: '10px 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+            Paste JSON or simple key-value company details and the profile fields will be
+            auto-filled.{' '}
+            <button
+              type="button"
+              className="doc-cat-note__link"
+              onClick={() => setCompanyImportText(EXAMPLE_IMPORT)}
+            >
+              Fill in an example
+            </button>
+          </p>
+
+          {/* What the import actually did. Most imported fields live on Steps 2-3,
+              so without this the page looks unchanged and the import looks broken. */}
+          {importReport && (
+            <div className="import-report">
+              {importReport.filled.length > 0 && (
+                <>
+                  <div className="import-report__head">
+                    <span className="badge badge-green">
+                      {importReport.filled.length} field{importReport.filled.length === 1 ? '' : 's'} filled
+                    </span>
+                    <strong className="import-report__success">Company details imported successfully.</strong>
+                  </div>
+
+                  {/* What the deterministic engine concluded from the saved
+                      profile. Read back from the API, so it is evidence the
+                      import reached the engine rather than a local claim. */}
+                  {engineResult ? (
+                    <p className="import-report__note import-report__note--engine">
+                      Saved to your profile. The deterministic engine re-evaluated{' '}
+                      {engineResult.total} rule{engineResult.total === 1 ? '' : 's'}:{' '}
+                      <strong>{engineResult.applies} now apply</strong>
+                      {engineResult.insufficientData > 0 && (
+                        <> · {engineResult.insufficientData} still need more profile detail</>
+                      )}
+                      . Your documents and obligations are up to date.
+                    </p>
+                  ) : (
+                    <p className="import-report__note">
+                      {importing
+                        ? 'Saving to your profile so the engine can recalculate…'
+                        : 'Review each step and press ' +
+                          t('common.completeProfile', 'Complete Profile') +
+                          ' to finish.'}
+                    </p>
+                  )}
+
+                  <div className="import-report__grid">
+                    {importReport.filled.map(item => (
+                      <div key={item.field} className="import-report__row">
+                        <span className="import-report__label">{t(item.labelKey, item.labelFallback)}</span>
+                        <span className="import-report__value">{item.display}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {importReport.warnings.map((warning, i) => (
+                <p key={i} className="import-report__note import-report__note--warn">{warning}</p>
+              ))}
+
+              {importReport.unresolved.length > 0 && (
+                <div className="import-report__block">
+                  <span className="import-report__label">Could not be filled</span>
+                  {importReport.unresolved.map(item => (
+                    <p key={item.field} className="import-report__note">
+                      <strong>{t(item.labelKey, item.labelFallback)}</strong> — "{item.raw}" · {item.reason}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {importReport.unknownKeys.length > 0 && (
+                <div className="import-report__block">
+                  <span className="import-report__label">Not a profile field</span>
+                  <p className="import-report__note">{importReport.unknownKeys.join(', ')}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Progress bar */}
         <div style={{ display: 'flex', gap: '6px', marginBottom: '32px' }}>
@@ -256,33 +644,30 @@ const Onboarding = () => {
                   <label className="form-label">{t('form.entityType', 'Entity Type')}</label>
                   <select className="form-input" value={form.entityType} onChange={e => update('entityType', e.target.value)}>
                     <option value="">{t('form.selectEntity', 'Select Entity Type')}</option>
-                    <option>{t('form.entity.proprietorship', 'Proprietorship')}</option>
-                    <option>{t('form.entity.partnership', 'Partnership')}</option>
-                    <option>{t('form.entity.privateLimited', 'Private Limited')}</option>
-                    <option>{t('form.entity.llp', 'LLP')}</option>
+                    {ENTITY_TYPES.map(o => (
+                      <option key={o.value} value={o.value}>{t(o.labelKey, o.labelFallback)}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">{t('form.annualTurnover', 'Annual Turnover')}</label>
                   <select className="form-input" value={form.annualTurnoverBand} onChange={e => update('annualTurnoverBand', e.target.value)}>
                     <option value="">{t('form.selectTurnover', 'Select Turnover')}</option>
-                    <option value="< 5Cr">{t('form.turnover.below5', 'Below ₹5 Crore')}</option>
-                    <option value="5-50Cr">{t('form.turnover.5to50', '₹5 - ₹50 Crore')}</option>
-                    <option value="> 50Cr">{t('form.turnover.above50', 'Above ₹50 Crore')}</option>
+                    {TURNOVER_BANDS.map(o => (
+                      <option key={o.value} value={o.value}>{t(o.labelKey, o.labelFallback)}</option>
+                    ))}
                   </select>
                 </div>
               </div>
-              
+
               <div className="grid-2">
                 <div className="form-group">
                   <label className="form-label">{t('form.industry', 'Industry')}</label>
                   <select className="form-input" value={form.industry} onChange={e => update('industry', e.target.value)}>
                     <option value="">{t('form.selectIndustry', 'Select Industry')}</option>
-                    <option>{t('form.ind.food', 'Food Processing')}</option>
-                    <option>{t('form.ind.mfg', 'Manufacturing')}</option>
-                    <option>{t('form.ind.it', 'IT / Software')}</option>
-                    <option>{t('form.ind.retail', 'Retail')}</option>
-                    <option>{t('form.ind.health', 'Healthcare')}</option>
+                    {INDUSTRIES.map(o => (
+                      <option key={o.value} value={o.value}>{t(o.labelKey, o.labelFallback)}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">
@@ -296,12 +681,9 @@ const Onboarding = () => {
                   <label className="form-label">{t('form.foodCategory', 'Food Product Category')}</label>
                   <select className="form-input" value={form.foodProductCategory} onChange={e => update('foodProductCategory', e.target.value)}>
                     <option value="">{t('form.selectFoodCategory', 'Select Category')}</option>
-                    <option>{t('form.food.spices', 'Spices and Condiments')}</option>
-                    <option>{t('form.food.packaged', 'Packaged Foods')}</option>
-                    <option>{t('form.food.dairy', 'Dairy Products')}</option>
-                    <option>{t('form.food.rte', 'Ready to Eat')}</option>
-                    <option>{t('form.food.bakery', 'Bakery Products')}</option>
-                    <option>{t('form.food.beverages', 'Beverages')}</option>
+                    {FOOD_CATEGORIES.map(o => (
+                      <option key={o.value} value={o.value}>{t(o.labelKey, o.labelFallback)}</option>
+                    ))}
                   </select>
                 </div>
               )}

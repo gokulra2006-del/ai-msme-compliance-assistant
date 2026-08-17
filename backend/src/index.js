@@ -6,6 +6,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const passport = require('passport');
+// Needed by the error handler below to recognise MulterError instances.
+const multer = require('multer');
 
 // Load models
 require('./models/User');
@@ -67,6 +69,34 @@ app.use('/api/simulator', simulatorRoutes);
 // simple health endpoint
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// Errors thrown by middleware (rather than inside a controller's try/catch)
+// had no handler, so Express answered with its default HTML page. The frontend
+// reads `error` off a JSON body, so a rejected upload surfaced only as a bare
+// "Upload failed" with no reason. Multer is the case that matters: its file
+// filter and size limit both throw here, never in the controller.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'The file is larger than the 10 MB limit.'
+        : err.code === 'LIMIT_UNEXPECTED_FILE'
+          ? 'Unexpected file field. Attach the document to the "file" field.'
+          : `Upload rejected: ${err.message}`;
+    return res.status(400).json({ success: false, error: message });
+  }
+
+  // The upload file filter rejects with a plain Error carrying a readable
+  // reason (wrong MIME type, or an extension that disagrees with it).
+  if (err instanceof Error && /not allowed|does not match the declared type/i.test(err.message)) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+
+  console.error('Unhandled error:', err);
+  res.status(500).json({ success: false, error: err.message || 'Unexpected server error.' });
+});
+
 const startServer = async () => {
   let uri = process.env.MONGODB_URI;
   try {
@@ -93,29 +123,21 @@ const startServer = async () => {
   setTimeout(runReminderJob, 5000); // run 5s after startup
   setInterval(runReminderJob, 15 * 60 * 1000); // run every 15 minutes
 
-  const startListening = (port, attemptsLeft = 10) => {
-    const server = app.listen(port, () => console.log(`Server running on port ${port}`));
+  // The backend is pinned to port 5000 - the frontend calls http://localhost:5000/api
+  // directly, so never fall back to another port.
+  const PORT = 5000;
 
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE' && attemptsLeft > 0) {
-        const nextPort = port + 1;
-        console.warn(`Port ${port} is already in use. Retrying on ${nextPort}...`);
-        startListening(nextPort, attemptsLeft - 1);
-        return;
-      }
+  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-      if (error.code === 'EADDRINUSE') {
-        console.error(`All ports between ${process.env.PORT || 5000} and ${port} are busy. Please stop the other server or set a free PORT.`);
-        process.exit(1);
-        return;
-      }
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Stop the process using it and start again (Windows: netstat -ano | findstr :${PORT} then taskkill /PID <pid> /F).`);
+      process.exit(1);
+      return;
+    }
 
-      throw error;
-    });
-  };
-
-  const requestedPort = Number(process.env.PORT) || 5000;
-  startListening(requestedPort);
+    throw error;
+  });
 };
 
 startServer();
