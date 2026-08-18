@@ -108,18 +108,38 @@ const authLimiter = rateLimit({
   handler: (req, res, next, options) => {
     const ip = req.ip || req.connection.remoteAddress;
     
-    console.log(`[FIREWALL] Brute force detected from ${ip}. Dispatching SOC email alert...`);
+    console.log(`[FIREWALL] Brute force detected from ${ip}. Dispatching dual email alerts...`);
     
-    const mailOptions = {
+    // 1. Alert for the USER
+    const userMailOptions = {
       from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
-      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in, dishalcbi@gmail.com, dhanishkanth1122@gmail.com, deepthii.1807@gmail.com',
+      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in',
+      subject: '⚠️ SECURITY ALERT: Unauthorized Access Attempt Prevented',
+      html: `
+        <div style="font-family: Arial, sans-serif; border: 2px solid #f0ad4e; padding: 20px; border-radius: 8px;">
+          <h2 style="color: #d9534f; text-align: center;">Security Incident Prevented</h2>
+          <hr style="border: 1px solid #f0ad4e;" />
+          <p style="font-size: 16px;">Dear User,</p>
+          <p>Our Web Application Firewall has detected multiple unauthorized login attempts targeting your account. <strong>Your account is currently under threat.</strong></p>
+          <p>For your protection, we have temporarily locked out the attacker and forwarded all tracking data (including the attacker's IP address) to our Cyber Security Operations Center (SOC).</p>
+          <p style="margin-top: 20px; font-weight: bold;">Action Required:</p>
+          <p>Please contact our Cyber Support team immediately for assistance in securing your account.</p>
+          <p style="color: #777; font-size: 12px; margin-top: 30px;">This is an automated message from the SurakshaSetu Security Infrastructure.</p>
+        </div>
+      `
+    };
+
+    // 2. Alert for the CYBER TEAM (SOC)
+    const socMailOptions = {
+      from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
+      to: 'dishalcbi@gmail.com, dhanishkanth1122@gmail.com, deepthii.1807@gmail.com',
       subject: '🚨 CRITICAL: Security Breach Detected - Action Required',
       html: `
         <div style="font-family: Arial, sans-serif; border: 2px solid #d9534f; padding: 20px; border-radius: 8px;">
           <h2 style="color: #d9534f; text-align: center;">🚨 CRITICAL SECURITY BREACH DETECTED 🚨</h2>
           <hr style="border: 1px solid #d9534f;" />
           <p style="font-size: 16px;"><strong>ATTENTION SOC / CYBER HELPLINE TEAM:</strong></p>
-          <p>The Web Application Firewall has actively intercepted a severe brute-force password attack. <strong>A user account is currently under threat.</strong></p>
+          <p>The Web Application Firewall has actively intercepted a severe brute-force password attack. A user account is currently under threat.</p>
           <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
             <tr style="background-color: #f9f9f9;">
               <td style="padding: 10px; border: 1px solid #ddd;"><strong>Target Endpoint:</strong></td>
@@ -130,18 +150,30 @@ const authLimiter = rateLimit({
               <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f;"><strong>${ip}</strong></td>
             </tr>
             <tr style="background-color: #f9f9f9;">
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Timestamp:</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;">${new Date().toISOString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Attacker Location:</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;">Geolocation Trace Initiated (See SOC Dashboard)</td>
+            </tr>
+            <tr style="background-color: #f9f9f9;">
               <td style="padding: 10px; border: 1px solid #ddd;"><strong>Initial Action Taken:</strong></td>
               <td style="padding: 10px; border: 1px solid #ddd;">IP temporarily isolated and rate-limited.</td>
             </tr>
           </table>
-          <p style="margin-top: 20px; font-weight: bold;">⚠️ Please contact the Cyber Help Line for immediate support to review the logs and permanently blacklist this threat actor.</p>
+          <p style="margin-top: 20px; font-weight: bold;">⚠️ Please review the logs, contact the affected user, and permanently blacklist this threat actor.</p>
         </div>
       `
     };
 
-    transporter.sendMail(mailOptions)
-      .then(info => console.log(`[FIREWALL] SOC Email successfully sent: ${info.messageId}`))
-      .catch(err => console.error('[FIREWALL] SOC Email failed to send:', err));
+    // Dispatch both emails
+    Promise.all([
+      transporter.sendMail(userMailOptions),
+      transporter.sendMail(socMailOptions)
+    ])
+      .then(() => console.log('[FIREWALL] Dual email alerts successfully sent (User + SOC)'))
+      .catch(err => console.error('[FIREWALL] Email failed to send:', err));
 
     res.status(429).json({ success: false, error: 'Too many authentication attempts, please try again later.' });
   }
