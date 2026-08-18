@@ -108,27 +108,40 @@ const authLimiter = rateLimit({
   handler: (req, res, next, options) => {
     const ip = req.ip || req.connection.remoteAddress;
     
-    console.log(`[FIREWALL] Brute force detected from ${ip}. Dispatching email alert...`);
+    console.log(`[FIREWALL] Brute force detected from ${ip}. Dispatching SOC email alert...`);
     
     const mailOptions = {
       from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
-      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in',
-      subject: '⚠️ SECURITY ALERT: Brute Force Attack Blocked!',
+      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in, dishalcbi@gmail.com',
+      subject: '🚨 CRITICAL: Security Breach Detected - Action Required',
       html: `
-        <h2 style="color: #d9534f;">SurakshaSetu Firewall Alert</h2>
-        <p>The Web Application Firewall has detected and blocked a brute-force password attack.</p>
-        <ul>
-          <li><strong>Target:</strong> /api/auth/login</li>
-          <li><strong>Attacker IP:</strong> ${ip}</li>
-          <li><strong>Action Taken:</strong> IP temporarily banned for 15 minutes.</li>
-        </ul>
-        <p>No further action is required. The system is secure.</p>
+        <div style="font-family: Arial, sans-serif; border: 2px solid #d9534f; padding: 20px; border-radius: 8px;">
+          <h2 style="color: #d9534f; text-align: center;">🚨 CRITICAL SECURITY BREACH DETECTED 🚨</h2>
+          <hr style="border: 1px solid #d9534f;" />
+          <p style="font-size: 16px;"><strong>ATTENTION SOC / CYBER HELPLINE TEAM:</strong></p>
+          <p>The Web Application Firewall has actively intercepted a severe brute-force password attack against the authentication infrastructure.</p>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <tr style="background-color: #f9f9f9;">
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Target Endpoint:</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;">/api/auth/login</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Attacker IP Address:</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f;"><strong>${ip}</strong></td>
+            </tr>
+            <tr style="background-color: #f9f9f9;">
+              <td style="padding: 10px; border: 1px solid #ddd;"><strong>Initial Action Taken:</strong></td>
+              <td style="padding: 10px; border: 1px solid #ddd;">IP temporarily isolated and rate-limited.</td>
+            </tr>
+          </table>
+          <p style="margin-top: 20px; font-weight: bold;">⚠️ Please contact the Cyber Help Line for immediate support to review the logs and permanently blacklist this threat actor.</p>
+        </div>
       `
     };
 
     transporter.sendMail(mailOptions)
-      .then(info => console.log(`[FIREWALL] Email successfully sent: ${info.messageId}`))
-      .catch(err => console.error('[FIREWALL] Email failed to send:', err));
+      .then(info => console.log(`[FIREWALL] SOC Email successfully sent: ${info.messageId}`))
+      .catch(err => console.error('[FIREWALL] SOC Email failed to send:', err));
 
     res.status(429).json({ success: false, error: 'Too many authentication attempts, please try again later.' });
   }
