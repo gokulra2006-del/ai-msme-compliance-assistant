@@ -57,7 +57,8 @@ const DocumentPreparation = () => {
     setLoading(true);
     try {
       const response = await axios.get(`${API}/document-drafts/dashboard`, { headers });
-      setDashboardData(response.data.data);
+      // FORCED DEMO DATA FOR PRESENTATION
+      setDashboardData(DEMO_DOC_DASHBOARD);
       setError('');
     } catch (err: any) {
       if (err.response?.status === 401) { logout(); navigate('/login'); return; }

@@ -85,9 +85,10 @@ const EvidenceVault = () => {
         axios.get(`${API}/evidence?latest=true`, { headers }),
         axios.get(`${API}/obligations`, { headers })
       ]);
-      setDashboard(dashRes.data.data);
-      setAllEvidence(evidenceRes.data.data);
-      setObligations(oblRes.data.data.filter((o: any) => o.applicability === 'APPLIES'));
+      // FORCED DEMO DATA FOR PRESENTATION
+      setDashboard(DEMO_EVIDENCE_DASHBOARD);
+      setAllEvidence(DEMO_EVIDENCE_DASHBOARD.requiredDocuments);
+      setObligations([]);
     } catch (err: any) {
       if (err.response?.status === 401) { logout(); navigate('/login'); return; }
       console.warn('[EvidenceVault] API unavailable, using demo data.');

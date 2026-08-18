@@ -39,15 +39,10 @@ const Dashboard = () => {
             axios.get(`${API}/business/activity`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: [] } })),
             axios.get(`${API}/notifications/alerts-summary`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: null } }))
           ]);
-          setData({ 
-            ...oblRes.data.data, 
-            evidence: evRes.data.data, 
-            calendar: calRes.data.data,
-            history: historyRes.data.data || [],
-            activity: activityRes.data.data || [],
-            alerts: alertsRes.data.data || null
-          });
-          setRiskData(riskRes.data.data);
+          
+          // FORCED DEMO DATA FOR PRESENTATION
+          setData(DEMO_DASHBOARD);
+          setRiskData(DEMO_RISK);
         }
       } catch (err: any) {
         if (err.response?.status === 401) { logout(); navigate('/login'); return; }

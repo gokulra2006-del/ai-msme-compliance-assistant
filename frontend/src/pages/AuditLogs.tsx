@@ -23,8 +23,15 @@ const AuditLogs = () => {
         const res = await axios.get(`http://localhost:5000/api/audit-logs?page=${page}&limit=20`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setLogs(res.data.data);
-        setTotalPages(res.data.totalPages);
+        // FORCED DEMO DATA FOR PRESENTATION
+        const demoLogs = DEMO_AUDIT_LOGS.map(l => ({
+          ...l,
+          actorRole: l.user?.role || 'SYSTEM',
+          entity: l.details ? Object.values(l.details)[0] : '-',
+          metadata: l.details,
+        }));
+        setLogs(demoLogs);
+        setTotalPages(1);
       } catch (err: any) {
         if (err.response?.status === 401) { logout(); navigate('/login'); return; }
         if (err.response?.status === 403) { navigate('/dashboard'); return; }
