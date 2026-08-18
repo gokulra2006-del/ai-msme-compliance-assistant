@@ -112,14 +112,14 @@ const authLimiter = rateLimit({
     
     const mailOptions = {
       from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
-      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in, dishalcbi@gmail.com',
+      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in, dishalcbi@gmail.com, dhanishkanth1122@gmail.com, deepthii.1807@gmail.com',
       subject: '🚨 CRITICAL: Security Breach Detected - Action Required',
       html: `
         <div style="font-family: Arial, sans-serif; border: 2px solid #d9534f; padding: 20px; border-radius: 8px;">
           <h2 style="color: #d9534f; text-align: center;">🚨 CRITICAL SECURITY BREACH DETECTED 🚨</h2>
           <hr style="border: 1px solid #d9534f;" />
           <p style="font-size: 16px;"><strong>ATTENTION SOC / CYBER HELPLINE TEAM:</strong></p>
-          <p>The Web Application Firewall has actively intercepted a severe brute-force password attack against the authentication infrastructure.</p>
+          <p>The Web Application Firewall has actively intercepted a severe brute-force password attack. <strong>A user account is currently under threat.</strong></p>
           <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
             <tr style="background-color: #f9f9f9;">
               <td style="padding: 10px; border: 1px solid #ddd;"><strong>Target Endpoint:</strong></td>
