@@ -98,7 +98,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Cache to prevent spamming emails from the same IP
+// Cache to prevent spamming emails from the same IP (temporarily disabled for hackathon demo)
 const alertCache = new Set();
 
 // Strict rate limiter for authentication to prevent brute force
@@ -108,31 +108,27 @@ const authLimiter = rateLimit({
   handler: (req, res, next, options) => {
     const ip = req.ip || req.connection.remoteAddress;
     
-    // Send email alert if not already sent for this IP recently
-    if (!alertCache.has(ip)) {
-      alertCache.add(ip);
-      
-      const mailOptions = {
-        from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
-        to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in',
-        subject: '⚠️ SECURITY ALERT: Brute Force Attack Blocked!',
-        html: `
-          <h2 style="color: #d9534f;">SurakshaSetu Firewall Alert</h2>
-          <p>The Web Application Firewall has detected and blocked a brute-force password attack.</p>
-          <ul>
-            <li><strong>Target:</strong> /api/auth/login</li>
-            <li><strong>Attacker IP:</strong> ${ip}</li>
-            <li><strong>Action Taken:</strong> IP temporarily banned for 15 minutes.</li>
-          </ul>
-          <p>No further action is required. The system is secure.</p>
-        `
-      };
+    console.log(`[FIREWALL] Brute force detected from ${ip}. Dispatching email alert...`);
+    
+    const mailOptions = {
+      from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
+      to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in',
+      subject: '⚠️ SECURITY ALERT: Brute Force Attack Blocked!',
+      html: `
+        <h2 style="color: #d9534f;">SurakshaSetu Firewall Alert</h2>
+        <p>The Web Application Firewall has detected and blocked a brute-force password attack.</p>
+        <ul>
+          <li><strong>Target:</strong> /api/auth/login</li>
+          <li><strong>Attacker IP:</strong> ${ip}</li>
+          <li><strong>Action Taken:</strong> IP temporarily banned for 15 minutes.</li>
+        </ul>
+        <p>No further action is required. The system is secure.</p>
+      `
+    };
 
-      transporter.sendMail(mailOptions).catch(console.error);
-
-      // Clear the cache for this IP after 15 minutes
-      setTimeout(() => alertCache.delete(ip), 15 * 60 * 1000);
-    }
+    transporter.sendMail(mailOptions)
+      .then(info => console.log(`[FIREWALL] Email successfully sent: ${info.messageId}`))
+      .catch(err => console.error('[FIREWALL] Email failed to send:', err));
 
     res.status(429).json({ success: false, error: 'Too many authentication attempts, please try again later.' });
   }
