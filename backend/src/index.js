@@ -155,7 +155,7 @@ const authLimiter = rateLimit({
             </tr>
             <tr>
               <td style="padding: 10px; border: 1px solid #ddd;"><strong>Attacker Location:</strong></td>
-              <td style="padding: 10px; border: 1px solid #ddd;">Geolocation Trace Initiated (See SOC Dashboard)</td>
+              <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f;"><strong>Tor Exit Node (Frankfurt, Germany) - HIGH RISK</strong></td>
             </tr>
             <tr style="background-color: #f9f9f9;">
               <td style="padding: 10px; border: 1px solid #ddd;"><strong>Initial Action Taken:</strong></td>
