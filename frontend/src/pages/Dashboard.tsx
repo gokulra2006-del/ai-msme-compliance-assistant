@@ -265,7 +265,7 @@ const Dashboard = () => {
                 'var(--border)'
               }`
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
                 <div style={{ textAlign: 'center', paddingRight: '24px', borderRight: '1px solid var(--border)' }}>
                   <h2 className="card-title micro" style={{ textTransform: 'uppercase' }}>{t('dash.complianceRisk')}</h2>
                   

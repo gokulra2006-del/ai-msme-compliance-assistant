@@ -166,57 +166,10 @@ const DocumentPreparation = () => {
                 <h1 className="page-title">{t('documents.dashboard', 'Document Preparation Dashboard')}</h1>
               <p className="page-subtitle">Draft, manage, and prepare official documents in a few simple steps.</p>
             </div>
-            <div className="doc-prep-dash__how-it-works">
-              <div className="doc-prep-dash__how-icon-bg">
-                <FileText size={22} className="doc-prep-dash__how-icon-main" />
-                <div className="doc-prep-dash__how-check"><CheckCircle size={14} fill="#10b981" color="#fff" /></div>
-              </div>
-              <div className="doc-prep-dash__how-text">
-                <strong>How it works</strong>
-                <p>We guide you step-by-step to collect information, draft your document using AI, and export it for submission.</p>
-              </div>
-              <ArrowRight size={18} className="doc-prep-dash__how-arrow" />
-            </div>
           </div>
 
           {error && <div className="error-box" role="alert">{error}</div>}
-
-          <div className="doc-prep-dash__metrics">
-            <div className="doc-prep-dash__metric">
-              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--green"><FileText size={22} /></div>
-              <div className="doc-prep-dash__metric-info">
-                <span className="doc-prep-dash__metric-value">{dashboardData?.actions?.length || 0}</span>
-                <span className="doc-prep-dash__metric-label">Documents Needed</span>
-                <span className="doc-prep-dash__metric-sub">Pending preparation</span>
-              </div>
-            </div>
-            <div className="doc-prep-dash__metric">
-              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--orange"><Edit3 size={22} /></div>
-              <div className="doc-prep-dash__metric-info">
-                <span className="doc-prep-dash__metric-value">{dashboardData?.draftsInProgress?.length || 0}</span>
-                <span className="doc-prep-dash__metric-label">Drafts In Progress</span>
-                <span className="doc-prep-dash__metric-sub">Continue where you left off</span>
-              </div>
-            </div>
-            <div className="doc-prep-dash__metric">
-              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--blue"><Hourglass size={22} /></div>
-              <div className="doc-prep-dash__metric-info">
-                <span className="doc-prep-dash__metric-value">{dashboardData?.awaitingReview?.length || 0}</span>
-                <span className="doc-prep-dash__metric-label">Awaiting Review</span>
-                <span className="doc-prep-dash__metric-sub">Ready for your review</span>
-              </div>
-            </div>
-            <div className="doc-prep-dash__metric">
-              <div className="doc-prep-dash__metric-icon doc-prep-dash__metric-icon--darkgreen"><CheckCircle size={22} /></div>
-              <div className="doc-prep-dash__metric-info">
-                <span className="doc-prep-dash__metric-value">{dashboardData?.approvedDocuments?.length || 0}</span>
-                <span className="doc-prep-dash__metric-label">Approved</span>
-                <span className="doc-prep-dash__metric-sub">Ready to download</span>
-              </div>
-            </div>
           </div>
-          </div>
-
           <div className="doc-prep-dash__scrollable">
             <section className="doc-prep-dash__main card">
               <div className="doc-prep-dash__main-header">
@@ -230,7 +183,11 @@ const DocumentPreparation = () => {
                   <input type="text" placeholder="Search documents..." />
                 </div>
                 <select className="doc-prep-dash__status-select">
-                  <option>All Status</option>
+                  <option value="ALL">All Status</option>
+                  <option value="NEEDED">Documents Needed</option>
+                  <option value="DRAFT">Drafts In Progress</option>
+                  <option value="REVIEW">Awaiting Review</option>
+                  <option value="APPROVED">Approved</option>
                 </select>
               </div>
             </div>
@@ -278,18 +235,7 @@ const DocumentPreparation = () => {
           </section>
           </div>
 
-          <div className="doc-prep-dash__bottom">
-            <div className="doc-prep-dash__help-banner">
-              <div className="doc-prep-dash__help-icon"><Lightbulb size={24} /></div>
-              <div className="doc-prep-dash__help-text">
-                <strong>Need help getting started?</strong>
-                <p>The Assistant can help identify the documents you need based on your business profile and guide you through the preparation process.</p>
-              </div>
-              <button className="btn btn-outline doc-prep-dash__help-btn" onClick={() => navigate('/assistant')}>
-                <MessageSquare size={16} /> Ask the Assistant
-              </button>
-            </div>
-          </div>
+
         </div>
       </AppLayout>
     );

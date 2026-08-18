@@ -332,7 +332,7 @@ const EvidenceVault = () => {
           )}
 
           {/* Summary Cards */}
-          <div className="metrics-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div className="metrics-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px', marginBottom: '24px' }}>
             <div className="card metric-card">
               <div className="card-title">{t('metrics.total_required', 'Total Required')}</div>
               <div className="metric-value" style={{ color: 'var(--text-primary)' }}>{summary.totalRequired || 0}</div>
@@ -522,7 +522,7 @@ const EvidenceVault = () => {
 
             {uploadError && <div className="error-box" style={{ marginBottom: '16px' }}>{uploadError}</div>}
 
-            <form onSubmit={handleUpload}>
+            <form onSubmit={handleUpload} style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
               <div className="form-group">
                 <label className="form-label">Obligation *</label>
                 <select className="form-input" value={uploadForm.obligationCode} onChange={e => setUploadForm({ ...uploadForm, obligationCode: e.target.value, documentType: '', documentName: '' })}>
