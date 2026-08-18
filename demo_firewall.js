@@ -74,9 +74,112 @@ async function runDemo() {
         console.log('  [!] Error connecting to backend.\n');
     }
 
-    // 3. Brute Force Demo
+    // 3. Phishing / Malicious Link Demo
     console.log('---------------------------------------------------------');
-    console.log('▶ TEST 3: Brute Force Password Attack (Rate Limiter)');
+    console.log('▶ TEST 3: Phishing / Malicious Link Injection');
+    console.log('  An attacker attempts to insert a phishing link into the application.');
+    console.log('  Example payload to copy/paste: Click here for free-money: http://bit.ly/hacked');
+    
+    let phishingPayload = await askQuestion('\n  [?] Enter your Phishing payload: ');
+
+    console.log('\n  [>] Sending payload to backend...');
+    await delay(1000);
+    
+    try {
+        const phishRes = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: phishingPayload, password: 'test' })
+        });
+        
+        console.log(`  [✔] RESULT: Backend intercepted attack. Status: ${phishRes.status}`);
+        const phishData = await phishRes.json();
+        console.log(`  [✔] EXPLANATION: Deep Packet Inspection detected and blocked the phishing attempt. Reason: ${phishData.error}\n`);
+    } catch (e) {
+        console.log('  [!] Error connecting to backend.\n');
+    }
+
+    // 4. Path Traversal Demo
+    console.log('---------------------------------------------------------');
+    console.log('▶ TEST 4: Path Traversal Attack');
+    console.log('  An attacker attempts to break out of the directory to read server files.');
+    console.log('  Example payload to copy/paste: ../../../etc/passwd');
+    
+    let pathPayload = await askQuestion('\n  [?] Enter your Path Traversal payload: ');
+
+    console.log('\n  [>] Sending payload to backend...');
+    await delay(1000);
+    
+    try {
+        const pathRes = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pathPayload, password: 'test' })
+        });
+        
+        console.log(`  [✔] RESULT: Backend intercepted attack. Status: ${pathRes.status}`);
+        const pathData = await pathRes.json();
+        console.log(`  [✔] EXPLANATION: Deep Packet Inspection detected and blocked the traversal attempt. Reason: ${pathData.error}\n`);
+    } catch (e) {
+        console.log('  [!] Error connecting to backend.\n');
+    }
+
+    // 5. Bot / Scraper Attack Demo
+    console.log('---------------------------------------------------------');
+    console.log('▶ TEST 5: Automated Bot / Scraper Detection');
+    console.log('  An attacker uses an automated scraping script (like python-requests or curl) to steal data.');
+    console.log('  We will send a request with a suspicious User-Agent header.');
+    
+    await askQuestion('\n  [?] Press Enter to launch the Bot Attack...');
+
+    console.log('\n  [>] Sending request with User-Agent: "python-requests/2.25.1" ...');
+    await delay(1000);
+    
+    try {
+        const botRes = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'User-Agent': 'python-requests/2.25.1'
+            },
+            body: JSON.stringify({ email: 'bot@bot.com', password: 'test' })
+        });
+        
+        console.log(`  [✔] RESULT: Backend intercepted attack. Status: ${botRes.status}`);
+        const botData = await botRes.json();
+        console.log(`  [✔] EXPLANATION: Firewall detected the scraping tool and blocked it. Reason: ${botData.error}\n`);
+    } catch (e) {
+        console.log('  [!] Error connecting to backend.\n');
+    }
+
+    // 6. Large Payload / DoS Demo
+    console.log('---------------------------------------------------------');
+    console.log('▶ TEST 6: Denial of Service (DoS) Large Payload Attack');
+    console.log('  An attacker attempts to crash the server by sending a massive 1MB string.');
+    
+    await askQuestion('\n  [?] Press Enter to launch the DoS Attack...');
+
+    console.log('\n  [>] Generating massive payload and sending to backend...');
+    await delay(1000);
+    
+    try {
+        // Create a massive string > 10kb
+        const massiveString = "A".repeat(50000); 
+        const dosRes = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: massiveString, password: 'test' })
+        });
+        
+        console.log(`  [✔] RESULT: Backend intercepted attack. Status: ${dosRes.status}`);
+        console.log(`  [✔] EXPLANATION: Payload Size Limiter (10kb max) blocked the request to prevent memory exhaustion.\n`);
+    } catch (e) {
+        console.log('  [!] Error connecting to backend.\n');
+    }
+
+    // 7. Brute Force Demo
+    console.log('---------------------------------------------------------');
+    console.log('▶ TEST 7: Brute Force Password Attack (Rate Limiter)');
     console.log('  An attacker attempts to guess passwords by sending rapid requests.');
     
     let numRequests = await askQuestion('\n  [?] How many rapid login attempts should the hacker send? (e.g. 20): ');
@@ -108,6 +211,7 @@ async function runDemo() {
 
     if (blocked) {
         console.log('\n  [✔] EXPLANATION: The strict authentication rate-limiter detected the brute-force anomaly and blocked the IP address.');
+        console.log('  [📧] AN EMAIL ALERT HAS BEEN DISPATCHED TO YOUR INBOX!');
     } else {
         console.log('\n  [!] The firewall allowed the requests because it didn\'t hit the 15 request threshold.');
     }

@@ -47,7 +47,8 @@ const migrateRules = require('./engine/migrateRules');
 const runReminderJob = require('./jobs/complianceReminderJob');
 
 const app = express();
-app.use(express.json());
+// 1. Large Payload Protection (DoS prevention)
+app.use(express.json({ limit: '10kb' }));
 app.use(cors());
 app.use(helmet());
 
@@ -55,6 +56,35 @@ app.use(helmet());
 app.use(mongoSanitize()); // Prevent NoSQL injections
 app.use(xss()); // Sanitize against XSS
 app.use(hpp()); // Prevent HTTP Parameter Pollution
+
+// Advanced AI Deep Packet Inspection & Phishing Blocker
+app.use((req, res, next) => {
+  // 2. Bot / Scraper Detection
+  const userAgent = req.get('User-Agent') || '';
+  if (userAgent.includes('python-requests') || userAgent.includes('curl/') || userAgent.includes('PostmanRuntime/')) {
+    return res.status(403).json({ success: false, error: 'FIREWALL BLOCKED: Automated bot or scraper detected.' });
+  }
+
+  const payload = JSON.stringify(req.body || {}) + JSON.stringify(req.query || {});
+  const lowerPayload = payload.toLowerCase();
+  
+  // 3. Phishing / Malicious Link Detection
+  if (lowerPayload.includes('free-money') || lowerPayload.includes('login-update') || lowerPayload.includes('bit.ly/')) {
+    return res.status(403).json({ success: false, error: 'FIREWALL BLOCKED: Phishing attempt or malicious link detected in payload.' });
+  }
+  
+  // 4. SQL Injection / Command Injection (Catch-All)
+  if (lowerPayload.includes('union select') || lowerPayload.includes('drop table') || lowerPayload.includes('; rm -rf')) {
+    return res.status(403).json({ success: false, error: 'FIREWALL BLOCKED: SQL/Command Injection signature detected.' });
+  }
+  
+  // 5. Path Traversal
+  if (payload.includes('../') || payload.includes('..\\') || lowerPayload.includes('/etc/passwd')) {
+    return res.status(403).json({ success: false, error: 'FIREWALL BLOCKED: Path Traversal attack detected.' });
+  }
+
+  next();
+});
 
 app.use(passport.initialize());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
