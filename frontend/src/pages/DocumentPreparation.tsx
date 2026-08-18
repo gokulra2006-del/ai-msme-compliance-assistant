@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import AppLayout from '../components/AppLayout';
 import { FileText, Edit3, Hourglass, CheckCircle, Search, Plus, Lightbulb, MessageSquare, ArrowRight } from 'lucide-react';
+import { DEMO_DOC_DASHBOARD } from '../demoData';
 
 const API = 'http://localhost:5000/api';
 
@@ -60,7 +61,9 @@ const DocumentPreparation = () => {
       setError('');
     } catch (err: any) {
       if (err.response?.status === 401) { logout(); navigate('/login'); return; }
-      setError(err.response?.data?.error || 'Unable to load document dashboard.');
+      console.warn('[DocumentPreparation] API unavailable, using demo data.');
+      setDashboardData(DEMO_DOC_DASHBOARD);
+      setError('');
     } finally {
       setLoading(false);
     }
@@ -190,14 +193,6 @@ const DocumentPreparation = () => {
                   <option value="APPROVED">Approved</option>
                 </select>
               </div>
-            </div>
-            
-            <div className="doc-prep-dash__pills">
-              <button className="doc-prep-dash__pill active">All</button>
-              <button className="doc-prep-dash__pill">Documents Needed</button>
-              <button className="doc-prep-dash__pill">Drafts In Progress</button>
-              <button className="doc-prep-dash__pill">Awaiting Review</button>
-              <button className="doc-prep-dash__pill">Approved</button>
             </div>
 
             {/* Empty State when no documents */}

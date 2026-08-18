@@ -3,6 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
+import { DEMO_AUDIT_LOGS } from '../demoData';
 
 const AuditLogs = () => {
   const { token, user, loading: authLoading, logout } = useContext(AuthContext);
@@ -25,9 +26,17 @@ const AuditLogs = () => {
         setLogs(res.data.data);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
-        if (err.response?.status === 401) { logout(); navigate('/login'); }
-        if (err.response?.status === 403) { navigate('/dashboard'); }
-        console.error(err);
+        if (err.response?.status === 401) { logout(); navigate('/login'); return; }
+        if (err.response?.status === 403) { navigate('/dashboard'); return; }
+        console.warn('[AuditLogs] API unavailable, using demo data.');
+        const demoLogs = DEMO_AUDIT_LOGS.map(l => ({
+          ...l,
+          actorRole: l.user?.role || 'SYSTEM',
+          entity: l.details ? Object.values(l.details)[0] : '-',
+          metadata: l.details,
+        }));
+        setLogs(demoLogs);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }

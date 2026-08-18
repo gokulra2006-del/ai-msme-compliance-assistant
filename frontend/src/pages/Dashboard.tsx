@@ -6,6 +6,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import AppLayout from '../components/AppLayout';
 import { UserRound, ClipboardList, UploadCloud, CalendarDays, FileText, ShieldCheck } from 'lucide-react';
+import { DEMO_DASHBOARD, DEMO_RISK } from '../demoData';
+
+const API = 'http://localhost:5000/api';
 
 const Dashboard = () => {
   const { token, user, loading: authLoading, logout } = useContext(AuthContext);
@@ -24,17 +27,17 @@ const Dashboard = () => {
     const fetch = async () => {
       try {
         if (user?.role === 'ADMIN') {
-          const res = await axios.get('http://localhost:5000/api/business/admin/metrics', { headers: { Authorization: `Bearer ${token}` } });
+          const res = await axios.get(`${API}/business/admin/metrics`, { headers: { Authorization: `Bearer ${token}` } });
           setAdminData(res.data.data);
         } else {
           const [oblRes, evRes, calRes, riskRes, historyRes, activityRes, alertsRes] = await Promise.all([
-            axios.get('http://localhost:5000/api/obligations/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
-            axios.get('http://localhost:5000/api/evidence/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
-            axios.get('http://localhost:5000/api/compliance-actions/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
-            axios.get('http://localhost:5000/api/risk/score', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: null } })),
-            axios.get('http://localhost:5000/api/risk/history', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: [] } })),
-            axios.get('http://localhost:5000/api/business/activity', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: [] } })),
-            axios.get('http://localhost:5000/api/notifications/alerts-summary', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: null } }))
+            axios.get(`${API}/obligations/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
+            axios.get(`${API}/evidence/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
+            axios.get(`${API}/compliance-actions/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
+            axios.get(`${API}/risk/score`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: null } })),
+            axios.get(`${API}/risk/history`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: [] } })),
+            axios.get(`${API}/business/activity`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: [] } })),
+            axios.get(`${API}/notifications/alerts-summary`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: null } }))
           ]);
           setData({ 
             ...oblRes.data.data, 
@@ -47,8 +50,10 @@ const Dashboard = () => {
           setRiskData(riskRes.data.data);
         }
       } catch (err: any) {
-        if (err.response?.status === 401) { logout(); navigate('/login'); }
-        console.error(err);
+        if (err.response?.status === 401) { logout(); navigate('/login'); return; }
+        console.warn('[Dashboard] API unavailable, using demo data.');
+        setData(DEMO_DASHBOARD);
+        setRiskData(DEMO_RISK);
       } finally {
         setLoading(false);
       }

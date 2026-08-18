@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import AppLayout from '../components/AppLayout';
+import { DEMO_EVIDENCE_DASHBOARD } from '../demoData';
 
 /** Finding severity → the badge classes the rest of this page already uses. */
 const DQ_SEVERITY_BADGE: Record<string, string> = {
@@ -88,7 +89,11 @@ const EvidenceVault = () => {
       setAllEvidence(evidenceRes.data.data);
       setObligations(oblRes.data.data.filter((o: any) => o.applicability === 'APPLIES'));
     } catch (err: any) {
-      if (err.response?.status === 401) { logout(); navigate('/login'); }
+      if (err.response?.status === 401) { logout(); navigate('/login'); return; }
+      console.warn('[EvidenceVault] API unavailable, using demo data.');
+      setDashboard(DEMO_EVIDENCE_DASHBOARD);
+      setAllEvidence(DEMO_EVIDENCE_DASHBOARD.requiredDocuments);
+      setObligations([]);
     } finally {
       setLoading(false);
     }
