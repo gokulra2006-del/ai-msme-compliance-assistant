@@ -6,8 +6,14 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const passport = require('passport');
+const nodemailer = require('nodemailer');
 // Needed by the error handler below to recognise MulterError instances.
 const multer = require('multer');
+
+// Firewall / Security middlewares
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 // Load models
 require('./models/User');
@@ -44,10 +50,65 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
+
+// Apply WAF/Firewall protections
+app.use(mongoSanitize()); // Prevent NoSQL injections
+app.use(xss()); // Sanitize against XSS
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+
 app.use(passport.initialize());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
 
-app.use('/api/auth', authRoutes);
+// Setup Email Transporter for Firewall Alerts
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
+
+// Cache to prevent spamming emails from the same IP
+const alertCache = new Set();
+
+// Strict rate limiter for authentication to prevent brute force
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // limit each IP to 15 requests per windowMs for auth
+  handler: (req, res, next, options) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    
+    // Send email alert if not already sent for this IP recently
+    if (!alertCache.has(ip)) {
+      alertCache.add(ip);
+      
+      const mailOptions = {
+        from: `"${process.env.GMAIL_FROM_NAME || 'SurakshaSetu Security'}" <${process.env.GMAIL_USER}>`,
+        to: 'gokulra2006@gmail.com, gokul.r2024c@vitstudent.ac.in',
+        subject: '⚠️ SECURITY ALERT: Brute Force Attack Blocked!',
+        html: `
+          <h2 style="color: #d9534f;">SurakshaSetu Firewall Alert</h2>
+          <p>The Web Application Firewall has detected and blocked a brute-force password attack.</p>
+          <ul>
+            <li><strong>Target:</strong> /api/auth/login</li>
+            <li><strong>Attacker IP:</strong> ${ip}</li>
+            <li><strong>Action Taken:</strong> IP temporarily banned for 15 minutes.</li>
+          </ul>
+          <p>No further action is required. The system is secure.</p>
+        `
+      };
+
+      transporter.sendMail(mailOptions).catch(console.error);
+
+      // Clear the cache for this IP after 15 minutes
+      setTimeout(() => alertCache.delete(ip), 15 * 60 * 1000);
+    }
+
+    res.status(429).json({ success: false, error: 'Too many authentication attempts, please try again later.' });
+  }
+});
+
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/business/updates', businessUpdatesRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/obligations', obligationRoutes);
