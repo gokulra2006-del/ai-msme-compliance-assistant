@@ -3,11 +3,17 @@ const { GoogleGenAI } = require('@google/genai');
 
 // Initialize AI providers based on configuration
 let geminiAI = null;
-try {
-  geminiAI = new GoogleGenAI();
-} catch (e) {
-  console.warn("GoogleGenAI initialized without API Key, it will fail if called.");
-}
+
+const getGeminiAI = () => {
+  if (!geminiAI && process.env.GEMINI_API_KEY) {
+    try {
+      geminiAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    } catch (e) {
+      console.warn("GoogleGenAI initialized failed:", e);
+    }
+  }
+  return geminiAI;
+};
 
 // Validate required API keys
 const validateAPIKeys = () => {
@@ -28,7 +34,7 @@ const validateAPIKeys = () => {
 const callOpenRouter = async (prompt, systemInstruction, language) => {
   const primaryModel = process.env.OPENROUTER_MODEL || 'gpt-3.5-turbo';
   const defaultFallbacks = [
-    'google/gemini-2.5-flash',
+    'google/gemini-3.6-flash',
     'google/gemma-2-9b-it:free',
     'meta-llama/llama-3.1-8b-instruct:free',
     'mistralai/mistral-7b-instruct:free',
@@ -135,12 +141,13 @@ const callNvidiaGrok = async (prompt, systemInstruction, language) => {
 
 // Google Gemini API call
 const callGemini = async (prompt, systemInstruction, language) => {
-  if (!geminiAI || !process.env.GEMINI_API_KEY) {
+  const ai = getGeminiAI();
+  if (!ai || !process.env.GEMINI_API_KEY) {
     throw new Error('Gemini API is not configured (GEMINI_API_KEY missing).');
   }
 
-  const response = await geminiAI.models.generateContent({
-    model: 'gemini-2.5-flash',
+  const response = await ai.models.generateContent({
+    model: 'gemini-3.6-flash',
     contents: prompt,
     config: {
       systemInstruction,
@@ -280,7 +287,7 @@ STRICT ANTI-HALLUCINATION RULES:
 8. Distinguish between system facts (e.g., "The system marks this as Overdue") and your explanation.
 9. Document extraction is not verified evidence. Never state an extracted value as fact unless its confidence is at least 80, the evidence verification status is VERIFIED, or the value was manually corrected. For lower-confidence values, say the document appears to show it and request manual verification.
 10. Never say a generated draft is filed, government-approved, legally certified, or an official form. It is only a draft requiring human review.
-11. If the user asks if a submission is ready, check the Submission Status in the context. Inform them of missing requirements if it is not ready. Never invent a submission URL. If one is not in the context, say it's not available in GAWK.
+11. If the user asks if a submission is ready, check the Submission Status in the context. Inform them of missing requirements if it is not ready. Never invent a submission URL. If one is not in the context, say it's not available in Suraksha Rules.
 
 LANGUAGE REQUIREMENT:
 ${langInstruction}
@@ -351,14 +358,14 @@ exports.generateDocumentDraft = async (businessProfile, obligation, gawkContext,
   const systemInstruction = `You are the SurakshaSetu AI Compliance Document Copilot.
 Your ONLY role is to generate non-official, internal draft compliance documents.
 
-CRITICAL REGULATORY RULE — GAWK ONLY:
-1. For this implementation, the GAWK reference document is your ONLY regulatory rules/data source.
-2. You MUST use ONLY the regulatory information contained in the GAWK reference text.
+CRITICAL REGULATORY RULE — Suraksha Rules ONLY:
+1. For this implementation, the Suraksha Rules reference document is your ONLY regulatory rules/data source.
+2. You MUST use ONLY the regulatory information contained in the Suraksha Rules reference text.
 3. Do NOT invent legal rules, thresholds, deadlines, penalties, applicability conditions, portals, authorities, or registration requirements.
-4. Do NOT guess when GAWK does not contain the required information.
-5. If GAWK does not contain enough information for a specific required field or clause, you MUST mark the information as: "Not available in the GAWK ruleset".
+4. Do NOT guess when Suraksha Rules does not contain the required information.
+5. If Suraksha Rules does not contain enough information for a specific required field or clause, you MUST mark the information as: "Not available in the Suraksha Rules engine".
 6. Every generated document MUST begin with the exact text: "DRAFT — REQUIRES HUMAN VERIFICATION BEFORE SUBMISSION"
-7. You MUST append a "REGULATORY BASIS" section at the end of the document citing the Act, Rule/Section, Authority, and Source from the APPLICABLE OBLIGATION's regulatorySource. If missing, write "SOURCE INFORMATION UNAVAILABLE IN GAWK."
+7. You MUST append a "REGULATORY BASIS" section at the end of the document citing the Act, Rule/Section, Authority, and Source from the APPLICABLE OBLIGATION's regulatorySource. If missing, write "SOURCE INFORMATION UNAVAILABLE IN Suraksha Rules."
 
 OUTPUT FORMAT (JSON ONLY):
 You must output a strictly valid JSON object matching this schema:
@@ -369,9 +376,9 @@ You must output a strictly valid JSON object matching this schema:
   const prompt = `=== BUSINESS PROFILE ===\n${JSON.stringify(businessProfile, null, 2)}
 === APPLICABLE OBLIGATION ===\n${JSON.stringify(obligation, null, 2)}
 === TEMPLATE REQUIREMENTS ===\n${JSON.stringify(templateDetails, null, 2)}
-=== GAWK REGULATORY REFERENCE (SOURCE OF TRUTH) ===\n${gawkContext}
+=== Suraksha Rules REGULATORY REFERENCE (SOURCE OF TRUTH) ===\n${gawkContext}
 
-Task: Generate the draft document based ONLY on the provided GAWK Regulatory Reference and Business Profile.
+Task: Generate the draft document based ONLY on the provided Suraksha Rules Regulatory Reference and Business Profile.
 `;
 
   try {

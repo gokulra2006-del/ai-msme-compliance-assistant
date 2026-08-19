@@ -8,16 +8,18 @@ import {
 } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
 
-const SCENARIOS = [
-  { id: 'hire_20', title: 'Hire 20 Employees', icon: Briefcase, changes: { totalWorkers: 20 }, type: 'add' },
-  { id: 'install_boiler', title: 'Install Boiler', icon: Factory, changes: { boiler: true }, type: 'set' },
-  { id: 'night_shift', title: 'Start Night Shift', icon: Zap, changes: { nightShift: true }, type: 'set' },
-  { id: 'start_export', title: 'Start Exporting', icon: Target, changes: { exportActivity: true }, type: 'set' },
-];
+
 
 export default function WhatIfSimulator() {
   const { token } = useAuth();
   const { t } = useLanguage();
+
+  const SCENARIOS = [
+    { id: 'hire_20', title: t('sim.hire20', 'Hire 20 Employees'), icon: Briefcase, changes: { totalWorkers: 20 }, type: 'add' },
+    { id: 'install_boiler', title: t('sim.installBoiler', 'Install Boiler'), icon: Factory, changes: { boiler: true }, type: 'set' },
+    { id: 'night_shift', title: t('sim.nightShift', 'Start Night Shift'), icon: Zap, changes: { nightShift: true }, type: 'set' },
+    { id: 'start_export', title: t('sim.exporting', 'Start Exporting'), icon: Target, changes: { exportActivity: true }, type: 'set' },
+  ];
   
   const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [simulatedChanges, setSimulatedChanges] = useState<any>({});
@@ -156,7 +158,7 @@ export default function WhatIfSimulator() {
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
             <Loader2 className="spin" size={22} />
-            <span>Loading profile...</span>
+            <span>{t('sim.loadingProfile', 'Loading profile...')}</span>
           </div>
         </div>
       </AppLayout>
@@ -167,7 +169,7 @@ export default function WhatIfSimulator() {
     return (
       <AppLayout pageTitle="Simulator">
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <h2 style={{ marginBottom: '12px', color: 'var(--text-primary)' }}>No business profile found</h2>
+          <h2 style={{ marginBottom: '12px', color: 'var(--text-primary)' }}>{t('sim.noProfile', 'No business profile found')}</h2>
           <p style={{ maxWidth: '520px', margin: '0 auto 20px', lineHeight: 1.6 }}>
             The simulator needs an existing business profile before it can calculate compliance impact.
           </p>
@@ -227,7 +229,7 @@ export default function WhatIfSimulator() {
             <div style={{ flex: '1 1 600px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div className="card">
                 <div className="card-header">
-                  <h3 className="card-title">1. Select a Scenario</h3>
+                  <h3 className="card-title">{t('sim.scenarioSelect', '1. Select a Scenario')}</h3>
                 </div>
                 <div className="grid-2" style={{ gap: '16px' }}>
                   {SCENARIOS.map((s) => (
@@ -252,11 +254,11 @@ export default function WhatIfSimulator() {
 
               <div className="card">
                 <div className="card-header">
-                  <h3 className="card-title">2. Or Edit Variables Manually</h3>
+                  <h3 className="card-title">{t('sim.editManual', '2. Or Edit Variables Manually')}</h3>
                 </div>
                 <div className="grid-2">
                   <div className="form-group">
-                    <label className="form-label">Total Employees</label>
+                    <label className="form-label">{t('sim.totalEmp', 'Total Employees')}</label>
                     <input 
                       type="number" 
                       className="form-input"
@@ -265,30 +267,30 @@ export default function WhatIfSimulator() {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">State</label>
+                    <label className="form-label">{t('sim.state', 'State')}</label>
                     <select 
                       className="form-input"
                       value={simulatedChanges.state !== undefined ? simulatedChanges.state : (currentProfile.state || '')}
                       onChange={(e) => handleManualChange('state', e.target.value)}
                     >
-                      <option value="MAHARASHTRA">Maharashtra</option>
-                      <option value="TAMIL NADU">Tamil Nadu</option>
-                      <option value="KARNATAKA">Karnataka</option>
-                      <option value="GUJARAT">Gujarat</option>
-                      <option value="HARYANA">Haryana</option>
+                      <option value="MAHARASHTRA">{t('sim.stateMH', 'Maharashtra')}</option>
+                      <option value="TAMIL NADU">{t('sim.stateTN', 'Tamil Nadu')}</option>
+                      <option value="KARNATAKA">{t('sim.stateKA', 'Karnataka')}</option>
+                      <option value="GUJARAT">{t('sim.stateGJ', 'Gujarat')}</option>
+                      <option value="HARYANA">{t('sim.stateHR', 'Haryana')}</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Industry</label>
+                    <label className="form-label">{t('sim.industry', 'Industry')}</label>
                     <select 
                       className="form-input"
                       value={simulatedChanges.industry !== undefined ? simulatedChanges.industry : (currentProfile.industry || '')}
                       onChange={(e) => handleManualChange('industry', e.target.value)}
                     >
-                      <option value="MANUFACTURING">Manufacturing</option>
-                      <option value="IT">IT/Software</option>
-                      <option value="FOOD_PROCESSING">Food Processing</option>
-                      <option value="PHARMACEUTICAL">Pharmaceutical</option>
+                      <option value="MANUFACTURING">{t('sim.indMfg', 'Manufacturing')}</option>
+                      <option value="IT">{t('sim.indIT', 'IT/Software')}</option>
+                      <option value="FOOD_PROCESSING">{t('sim.indFood', 'Food Processing')}</option>
+                      <option value="PHARMACEUTICAL">{t('sim.indPharma', 'Pharmaceutical')}</option>
                     </select>
                   </div>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '12px' }}>
@@ -313,20 +315,20 @@ export default function WhatIfSimulator() {
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '16px', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
               >
-                {loading ? <Loader2 size={20} className="spin" /> : 'Run Deterministic Simulation'}
+                {loading ? <Loader2 size={20} className="spin" /> : t('sim.runBtn', 'Run Deterministic Simulation')}
               </button>
             </div>
 
             <div style={{ flex: '1 1 300px' }}>
               <div className="card" style={{ position: 'sticky', top: '24px' }}>
                 <div className="card-header">
-                  <h3 className="card-title">Business Change</h3>
+                  <h3 className="card-title">{t('sim.bizChange', 'Business Change')}</h3>
                 </div>
                 <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-primary)' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>CURRENT STATE versus SIMULATED STATE</span>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)' }}>{t('sim.curVsSim', 'CURRENT STATE versus SIMULATED STATE')}</span>
                 </div>
                 {Object.keys(simulatedChanges).length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '14px', margin: 0 }}>No changes selected yet.</p>
+                  <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '14px', margin: 0 }}>{t('sim.noChangesSelected', 'No changes selected yet.')}</p>
                 ) : (
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {Object.entries(simulatedChanges).map(([k, v]) => (
@@ -366,10 +368,10 @@ export default function WhatIfSimulator() {
                   {result.results.riskDelta > 0 ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 4px 0', fontSize: '20px' }}>Simulated Result</h3>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '20px' }}>{t('sim.simResult', 'Simulated Result')}</h3>
                   <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px' }}>
-                    Current Risk Delta: <span style={{ fontWeight: 600, color: result.results.riskDelta > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                      {result.results.riskDelta > 0 ? `+${result.results.riskDelta}` : result.results.riskDelta} Points
+                    {t('sim.riskDelta', 'Current Risk Delta:')} <span style={{ fontWeight: 600, color: result.results.riskDelta > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                      {result.results.riskDelta > 0 ? `+${result.results.riskDelta}` : result.results.riskDelta} {t('sim.points', 'Points')}
                     </span>
                   </p>
                 </div>
@@ -386,24 +388,24 @@ export default function WhatIfSimulator() {
 
             <div className="card">
               <div className="card-header">
-                <h3 className="card-title">What-If Summary</h3>
+                <h3 className="card-title">{t('sim.summary', 'What-If Summary')}</h3>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>New Obligations</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>{t('sim.newObligations', 'New Obligations')}</div>
                   <div style={{ fontSize: '28px', fontWeight: 700 }}>{result.results.newRules.length}</div>
                 </div>
                 <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Removed Obligations</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>{t('sim.removedObligations', 'Removed Obligations')}</div>
                   <div style={{ fontSize: '28px', fontWeight: 700 }}>{result.results.removedRules.length}</div>
                 </div>
                 <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Evidence Impact</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>{t('sim.evidenceImpact', 'Evidence Impact')}</div>
                   <div style={{ fontSize: '28px', fontWeight: 700 }}>{result.results.evidenceImpact.added.length + result.results.evidenceImpact.removed.length}</div>
                 </div>
                 <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Simulated Calendar</div>
-                  <div style={{ fontSize: '10px', color: 'var(--danger)', fontWeight: 'bold', marginBottom: '8px' }}>NOT ACTIVE</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{t('sim.simCalendar', 'Simulated Calendar')}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--danger)', fontWeight: 'bold', marginBottom: '8px' }}>{t('sim.notActive', 'NOT ACTIVE')}</div>
                   <div style={{ fontSize: '28px', fontWeight: 700 }}>{result.results.calendarImpact.addedEvents.length}</div>
                 </div>
               </div>
@@ -417,7 +419,7 @@ export default function WhatIfSimulator() {
                   </h3>
                 </div>
                 {result.results.newRules.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px' }}>No new compliance requirements triggered.</p>
+                  <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px' }}>{t('sim.noNewRequirements', 'No new compliance requirements triggered.')}</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                     {result.results.newRules.map((rule: any, i: number) => (
@@ -428,8 +430,8 @@ export default function WhatIfSimulator() {
                         </div>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 12px 0' }}>{rule.reason}</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)' }}>
-                          <span>Source: {rule.source?.actName || rule.source}</span>
-                          <span>Freq: {rule.complianceFrequency}</span>
+                          <span>{t('sim.source', 'Source:')} {rule.source?.actName || rule.source}</span>
+                          <span>{t('sim.freq', 'Freq:')} {rule.complianceFrequency}</span>
                         </div>
                       </div>
                     ))}
@@ -444,7 +446,7 @@ export default function WhatIfSimulator() {
                   </h3>
                 </div>
                 {result.results.removedRules.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px' }}>No existing obligations removed.</p>
+                  <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px' }}>{t('sim.noExistingRemoved', 'No existing obligations removed.')}</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                     {result.results.removedRules.map((rule: any, i: number) => (
@@ -469,7 +471,7 @@ export default function WhatIfSimulator() {
               </p>
               
               <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '16px', marginBottom: '16px', minHeight: '100px', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
-                {aiAnswer || (aiLoading ? <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}><Loader2 size={16} className="spin" /> Analyzing...</span> : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No AI explanation requested yet.</span>)}
+                {aiAnswer || (aiLoading ? <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}><Loader2 size={16} className="spin" /> {t('sim.analyzing', 'Analyzing...')}</span> : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{t('sim.noAIExplanation', 'No AI explanation requested yet.')}</span>)}
               </div>
 
               <form onSubmit={askAi} style={{ display: 'flex', gap: '12px' }}>
@@ -477,7 +479,7 @@ export default function WhatIfSimulator() {
                   type="text" 
                   className="form-input"
                   style={{ flex: 1 }}
-                  placeholder="E.g., Why did risk increase by 15 points?"
+                  placeholder={t('sim.aiPlaceholder', 'E.g., Why did risk increase by 15 points?')}
                   value={aiQuestion}
                   onChange={(e) => setAiQuestion(e.target.value)}
                 />

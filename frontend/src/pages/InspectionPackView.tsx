@@ -100,7 +100,7 @@ const InspectionPackView = () => {
                 <div style={{ fontSize: '13px', color: '#555', marginTop: '4px', background: '#f5f5f5', padding: '6px', borderRadius: '4px' }}>
                   <strong>Risk:</strong> {gap.whyDoesItMatter || gap.reason} <br/>
                   <strong>Action Required:</strong> {gap.whatShouldIDo || 'Resolve immediately'} <br/>
-                  <strong>Regulatory Source:</strong> {gap.source || 'GAWK'}
+                  <strong>Regulatory Source:</strong> {gap.source || 'Suraksha Rules'}
                 </div>
               </li>
             ))}
@@ -114,7 +114,7 @@ const InspectionPackView = () => {
           <tr>
             <th>Document Type</th>
             <th>Related Obligation</th>
-            <th>Regulatory Source</th>
+            <th>{t('obl.regulatorySource', 'Regulatory Source')}</th>
             <th>Responsible</th>
           </tr>
         </thead>
@@ -123,7 +123,7 @@ const InspectionPackView = () => {
             <tr key={i}>
               <td><span style={{ color: '#c5221f', fontWeight: 'bold' }}>{doc.documentType}</span></td>
               <td>{doc.obligationTitle} ({doc.obligationCode})</td>
-              <td>{doc.regulatorySource ? `${doc.regulatorySource.actName} Sec ${doc.regulatorySource.section}` : 'GAWK'}</td>
+              <td>{doc.regulatorySource ? `${doc.regulatorySource.actName} Sec ${doc.regulatorySource.section}` : 'Suraksha Rules'}</td>
               <td>{doc.assignedTo ? doc.assignedTo.name : 'Unassigned'}</td>
             </tr>
           ))}
@@ -139,10 +139,10 @@ const InspectionPackView = () => {
           <thead>
             <tr>
               <th>Rule Code</th>
-              <th>Obligation</th>
-              <th>Severity</th>
+              <th>{t("obl.obligation", "Obligation")}</th>
+              <th>{t("obl.severity", "Severity")}</th>
               <th>Submission Status</th>
-              <th>Regulatory Source</th>
+              <th>{t('obl.regulatorySource', 'Regulatory Source')}</th>
             </tr>
           </thead>
           <tbody>
@@ -169,7 +169,7 @@ const InspectionPackView = () => {
             <tr>
               <th>Document Name</th>
               <th>Type</th>
-              <th>Obligation</th>
+              <th>{t("obl.obligation", "Obligation")}</th>
               <th>Verification Status</th>
               <th>Expiry Date</th>
             </tr>
@@ -201,7 +201,7 @@ const InspectionPackView = () => {
               <tr>
                 <th>Document Name</th>
                 <th>Type</th>
-                <th>Obligation</th>
+                <th>{t("obl.obligation", "Obligation")}</th>
                 <th>Uploaded By</th>
               </tr>
             </thead>

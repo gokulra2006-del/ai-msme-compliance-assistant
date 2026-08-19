@@ -93,9 +93,9 @@ const AuditLogs = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
-            <button className="btn btn-outline" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</button>
+            <button className="btn btn-outline" disabled={page === 1} onClick={() => setPage(p => p - 1)}>{t("ui.previous", "Previous")}</button>
             <span style={{ color: 'var(--text-secondary)' }}>Page {page} of {totalPages || 1}</span>
-            <button className="btn btn-outline" disabled={page === totalPages || totalPages === 0} onClick={() => setPage(p => p + 1)}>Next</button>
+            <button className="btn btn-outline" disabled={page === totalPages || totalPages === 0} onClick={() => setPage(p => p + 1)}>{t("ui.next", "Next")}</button>
           </div>
     </AppLayout>
   );

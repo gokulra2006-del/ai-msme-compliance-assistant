@@ -112,10 +112,10 @@ export default function AppLayout({ children, pageTitle, userData, fullBleed }: 
           {user?.role === 'ADMIN' && (
             <>
               <Link to="/users" className={`nav-link ${location.pathname === '/users' ? 'active' : ''}`}><Users size={18} /> <span>Users</span></Link>
-              <Link to="/simulator" className={`nav-link ${location.pathname === '/simulator' ? 'active' : ''}`}><Beaker size={18} /> <span>Admin Simulator</span></Link>
+              <Link to="/simulator" className={`nav-link ${location.pathname === '/simulator' ? 'active' : ''}`}><Beaker size={18} /> <span>{t('nav.adminSimulator', 'Admin Simulator')}</span></Link>
               <Link to="/businesses" className={`nav-link ${location.pathname === '/businesses' ? 'active' : ''}`}><Building2 size={18} /> <span>Businesses</span></Link>
               <Link to="/audit-logs" className={`nav-link ${location.pathname === '/audit-logs' ? 'active' : ''}`}><ScrollText size={18} /> <span>Audit Logs</span></Link>
-              <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>Inspection Readiness</span></Link>
+              <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>{t('nav.inspectionReadiness', 'Inspection Readiness')}</span></Link>
             </>
           )}
 
@@ -124,7 +124,7 @@ export default function AppLayout({ children, pageTitle, userData, fullBleed }: 
               <Link to="/obligations" className={`nav-link ${location.pathname === '/obligations' ? 'active' : ''}`}><ClipboardList size={18} /> <span>{t('nav.obligations', 'Obligations')}</span></Link>
               <Link to="/evidence" className={`nav-link ${location.pathname === '/evidence' ? 'active' : ''}`}><FolderLock size={18} /> <span>Evidence Review</span></Link>
               <Link to="/calendar" className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}><Calendar size={18} /> <span>{t('nav.calendar', 'Calendar')}</span></Link>
-              <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>Inspection Readiness</span></Link>
+              <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>{t('nav.inspectionReadiness', 'Inspection Readiness')}</span></Link>
               <Link to="/audit-logs" className={`nav-link ${location.pathname === '/audit-logs' ? 'active' : ''}`}><ScrollText size={18} /> <span>Audit Activity</span></Link>
             </>
           )}
@@ -139,12 +139,12 @@ export default function AppLayout({ children, pageTitle, userData, fullBleed }: 
 
           {(user?.role === 'OWNER' || !user?.role) && (
             <>
-              <Link to="/digital-twin" className={`nav-link ${location.pathname === '/digital-twin' ? 'active' : ''}`}><Database size={18} /> <span>Digital Twin</span></Link>
+              <Link to="/digital-twin" className={`nav-link ${location.pathname === '/digital-twin' ? 'active' : ''}`}><Database size={18} /> <span>{t('nav.digitalTwin', 'Digital Twin')}</span></Link>
               <Link to="/calendar" className={`nav-link ${location.pathname === '/calendar' ? 'active' : ''}`}><Calendar size={18} /> <span>{t('nav.calendar', 'Calendar')}</span></Link>
               <Link to="/obligations" className={`nav-link ${location.pathname === '/obligations' ? 'active' : ''}`}><ClipboardList size={18} /> <span>{t('nav.obligations', 'Obligations')}</span></Link>
               <Link to="/evidence" className={`nav-link ${location.pathname === '/evidence' ? 'active' : ''}`}><FolderLock size={18} /> <span>{t('nav.evidence', 'Evidence Vault')}</span></Link>
-              <Link to="/simulator" className={`nav-link ${location.pathname === '/simulator' ? 'active' : ''}`}><Beaker size={18} /> <span>Simulator</span></Link>
-              <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>Inspection Readiness</span></Link>
+              <Link to="/simulator" className={`nav-link ${location.pathname === '/simulator' ? 'active' : ''}`}><Beaker size={18} /> <span>{t('nav.simulator', 'Simulator')}</span></Link>
+              <Link to="/inspection-readiness" className={`nav-link ${location.pathname === '/inspection-readiness' ? 'active' : ''}`}><ShieldCheck size={18} /> <span>{t('nav.inspectionReadiness', 'Inspection Readiness')}</span></Link>
               <Link to="/onboarding" className={`nav-link ${location.pathname === '/onboarding' ? 'active' : ''}`}><Settings size={18} /> <span>{t('nav.editProfile', 'Edit Profile')}</span></Link>
             </>
           )}

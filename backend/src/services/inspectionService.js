@@ -56,7 +56,7 @@ class InspectionService {
 
       const isOverdue = action.dueDate && new Date(action.dueDate) < new Date() && action.status !== 'COMPLETED';
       
-      const penaltyDesc = obligation.penaltyDescription || 'Not available in the GAWK ruleset';
+      const penaltyDesc = obligation.penaltyDescription || 'Not available in the Suraksha Rules engine';
       const severityDesc = action.priority || obligation.severity;
       
       if (isOverdue) {
@@ -67,7 +67,7 @@ class InspectionService {
             obligation: obligation.title,
             severity: severityDesc,
             actionId: action._id,
-            reason: `Action "${action.title}" is overdue and poses significant compliance risk based on GAWK penalty guidelines.`,
+            reason: `Action "${action.title}" is overdue and poses significant compliance risk based on Suraksha Rules penalty guidelines.`,
             type: 'OVERDUE_ACTION',
             // Detailed explanation for AI & UI:
             whatIsTheIssue: `Action "${action.title}" is past its due date.`,
@@ -76,31 +76,9 @@ class InspectionService {
             whatShouldIDo: `Complete the action: ${action.recommendedAction || 'Follow obligation guidelines'}`,
             whoShouldDoIt: action.assignedTo ? action.assignedTo.name : 'Business Owner',
             whenShouldItBeDone: 'Immediately (Overdue)',
-            source: obligation.regulatorySource ? `${obligation.regulatorySource.actName} Sec ${obligation.regulatorySource.section}` : 'GAWK'
+            source: obligation.regulatorySource ? `${obligation.regulatorySource.actName} Sec ${obligation.regulatorySource.section}` : 'Suraksha Rules'
           });
         }
-      }
-
-      if (action.evidenceRequired && action.evidenceRequired.length > 0) {
-        action.evidenceRequired.forEach(docType => {
-          const key = `${action.ruleCode}::${docType}`;
-          requiredDocsMap.set(key, {
-            obligationCode: action.ruleCode,
-            obligationTitle: obligation.title,
-            severity: severityDesc,
-            documentType: docType,
-            status: 'MISSING',
-            evidenceState: 'MISSING',
-            satisfied: false,
-            evidenceId: null,
-            expiryDate: null,
-            assignedTo: action.assignedTo,
-            domain: obligation.complianceDomain,
-            regulatorySource: obligation.regulatorySource,
-            whyRequired: obligation.explanation || 'Required as per GAWK deterministic rules',
-            penalty: penaltyDesc
-          });
-        });
       }
 
       const submission = submissions.find(s => s.complianceAction?.toString() === action._id.toString());
@@ -129,32 +107,11 @@ class InspectionService {
       };
     }).filter(Boolean);
 
-    // 4. Resolve each required document against the vault
-    requiredDocsMap.forEach(reqDoc => {
-      const match = findEvidenceForRequirement(evidenceIdx, reqDoc.obligationCode, reqDoc.documentType, now);
-      const isLoose = match.matchType === 'DOCUMENT_TYPE_ONLY';
-      const state = isLoose ? 'MISSING' : resolveRequiredEvidenceState(match.evidence, now);
-      const evidence = isLoose ? null : match.evidence;
+    const ei = await EvidenceIntelligence.getEvidenceIntelligence({ business: businessId });
+    const documentChecklist = ei.requiredDocuments || ei.requirements; // ei.requirements is what evidenceIntelligenceService actually returns in its object!
 
-      reqDoc.evidenceState = state;
-      reqDoc.satisfied = satisfiesRequirement(state);
-      reqDoc.matchType = match.matchType;
-      reqDoc.evidenceId = evidence?._id || null;
-      reqDoc.documentName = evidence?.documentName || null;
-      reqDoc.expiryDate = evidence?.expiryDate || null;
-      reqDoc.expiryStatus = getExpiryStatus(evidence?.expiryDate, now);
-      reqDoc.suggestedEvidence = isLoose && match.evidence
-        ? {
-          evidenceId: match.evidence._id,
-          documentName: match.evidence.documentName,
-          filedUnderObligation: match.evidence.obligationCode,
-          note: 'A document of this type exists but is linked to a different obligation. A reviewer must confirm the link.'
-        }
-        : null;
-
-      reqDoc.status = state === 'AVAILABLE' ? 'VERIFIED' : state;
-
-      if (state === 'EXPIRED') {
+    documentChecklist.forEach(reqDoc => {
+      if (reqDoc.status === 'EXPIRED') {
         expiredCount++;
         if (['HIGH', 'CRITICAL'].includes(reqDoc.severity)) {
           criticalGaps.push({
@@ -162,18 +119,18 @@ class InspectionService {
             obligation: reqDoc.obligationTitle,
             severity: reqDoc.severity,
             docType: reqDoc.documentType,
-            reason: `Evidence "${reqDoc.documentType}" has expired. Operating without valid critical documents carries immediate legal risk under GAWK rules.`,
+            reason: `Evidence "${reqDoc.documentType}" has expired. Operating without valid critical documents carries immediate legal risk under Suraksha Rules.`,
             type: 'EXPIRED_EVIDENCE',
             whatIsTheIssue: `The required document "${reqDoc.documentType}" has expired.`,
-            whyDoesItMatter: reqDoc.penalty,
+            whyDoesItMatter: 'Non-compliance penalty',
             whatIsMissing: 'Valid, unexpired evidence',
             whatShouldIDo: 'Renew or re-issue the document and upload it to the Evidence Vault.',
             whoShouldDoIt: reqDoc.assignedTo ? reqDoc.assignedTo.name : 'Business Owner',
             whenShouldItBeDone: 'Immediately (Expired)',
-            source: reqDoc.regulatorySource ? `${reqDoc.regulatorySource.actName} Sec ${reqDoc.regulatorySource.section}` : 'GAWK'
+            source: 'Suraksha Rules'
           });
         }
-      } else if (state === 'UNVERIFIED' || state === 'UNDER_REVIEW') {
+      } else if (reqDoc.status === 'UNVERIFIED' || reqDoc.status === 'UNDER_REVIEW') {
         unverifiedCount++;
       }
     });
@@ -212,7 +169,6 @@ class InspectionService {
     });
 
     // Finalize missing docs and gaps
-    const documentChecklist = Array.from(requiredDocsMap.values());
     documentChecklist.forEach(doc => {
       const matchingDraft = drafts.find(d => d.obligationCode === doc.obligationCode);
       if (matchingDraft) {
@@ -231,7 +187,7 @@ class InspectionService {
             obligation: doc.obligationTitle,
             severity: doc.severity,
             docType: doc.documentType,
-            reason: `Failure to maintain ${doc.documentType} violates critical GAWK requirements for this obligation.`,
+            reason: `Failure to maintain ${doc.documentType} violates critical Suraksha Rules requirements for this obligation.`,
             type: doc.status === 'REJECTED' ? 'REJECTED_EVIDENCE' : 'MISSING_EVIDENCE',
             whatIsTheIssue: doc.status === 'REJECTED' ? `The uploaded document for "${doc.documentType}" was rejected by reviewer.` : `Required document "${doc.documentType}" has not been provided.`,
             whyDoesItMatter: doc.penalty,
@@ -239,7 +195,7 @@ class InspectionService {
             whatShouldIDo: doc.status === 'REJECTED' ? 'Fix the rejection issues and re-upload the document.' : 'Upload the missing document or prepare a draft via Document Copilot.',
             whoShouldDoIt: doc.assignedTo ? doc.assignedTo.name : 'Business Owner',
             whenShouldItBeDone: 'Immediate Priority',
-            source: doc.regulatorySource ? `${doc.regulatorySource.actName} Sec ${doc.regulatorySource.section}` : 'GAWK'
+            source: doc.regulatorySource ? `${doc.regulatorySource.actName} Sec ${doc.regulatorySource.section}` : 'Suraksha Rules'
           });
         }
       }

@@ -36,7 +36,7 @@ export type Language =
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, fallbackOrParams?: string | Record<string, any>, params?: Record<string, any>) => string;
 }
 
 const dictionaries: Record<Language, Record<string, string>> = {
@@ -94,16 +94,28 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const t = (key: string, fallback?: string): string => {
+  const t = (key: string, fallbackOrParams?: string | Record<string, any>, paramsObj?: Record<string, any>): string => {
+    let fallback = typeof fallbackOrParams === 'string' ? fallbackOrParams : undefined;
+    let params = typeof fallbackOrParams === 'object' ? fallbackOrParams : paramsObj;
+    
+    let result = key;
     const dict = dictionaries[language];
+    
     if (dict && dict[key]) {
-      return dict[key];
+      result = dict[key];
+    } else if (dictionaries['en'] && dictionaries['en'][key]) {
+      result = dictionaries['en'][key];
+    } else if (fallback) {
+      result = fallback;
     }
-    // Fallback to English dictionary
-    if (dictionaries['en'] && dictionaries['en'][key]) {
-      return dictionaries['en'][key];
+
+    if (params) {
+      Object.keys(params).forEach(p => {
+        result = result.replace(new RegExp(`{${p}}`, 'g'), String(params[p]));
+      });
     }
-    return fallback || key;
+
+    return result;
   };
 
   return (

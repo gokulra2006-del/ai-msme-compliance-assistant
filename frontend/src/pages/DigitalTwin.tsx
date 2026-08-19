@@ -34,7 +34,7 @@ export default function DigitalTwin() {
       <AppLayout pageTitle="Compliance Digital Twin">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
           <Loader2 className="spin" size={32} />
-          <span style={{ marginLeft: '12px' }}>Loading Digital Twin...</span>
+          <span style={{ marginLeft: '12px' }}>{t('dt.loading', 'Loading Digital Twin...')}</span>
         </div>
       </AppLayout>
     );
@@ -44,7 +44,7 @@ export default function DigitalTwin() {
     return (
       <AppLayout pageTitle="Compliance Digital Twin">
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <h2>No business profile configured yet.</h2>
+          <h2>{t('dt.noProfile', 'No business profile configured yet.')}</h2>
           <button onClick={() => navigate('/onboarding')} className="btn btn-primary" style={{ marginTop: '16px' }}>
             Complete Business Profile
           </button>
@@ -85,39 +85,39 @@ export default function DigitalTwin() {
           <div className="card">
             <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Briefcase size={20} style={{ color: 'var(--accent-light)' }} />
-              <h3 className="card-title" style={{ margin: 0 }}>Live Business Attributes</h3>
+              <h3 className="card-title" style={{ margin: 0 }}>{t('dt.liveAttr', 'Live Business Attributes')}</h3>
             </div>
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Name</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.name', 'Name')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.companyName || 'Not set'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>State / District</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.stateDistrict', 'State / District')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.state || '-'} / {profile.district || '-'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Industry</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.industry', 'Industry')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.industry || '-'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Total Workers</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.totalWorkers', 'Total Workers')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.totalWorkers || 0}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Contract Workers</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.contractWorkers', 'Contract Workers')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.contractWorkers || 0}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Night Shifts</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.nightShifts', 'Night Shifts')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.nightShift ? 'Yes' : 'No'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Boiler</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.boiler', 'Boiler')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.boiler ? 'Yes' : 'No'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Effluent Discharge</span>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dt.effluent', 'Effluent Discharge')}</span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{profile.effluent ? 'Yes' : 'No'}</span>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function DigitalTwin() {
                     <div>
                       <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '15px' }}>{rule.obligationTitle}</h3>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span>Source: {rule.regulatorySource?.actName || 'Unknown Act'}</span>
+                        <span>{t('dt.source', 'Source:')} {rule.regulatorySource?.actName || t('dt.unknownAct', 'Unknown Act')}</span>
                         <span className={`badge ${rule.severity === 'CRITICAL' ? 'badge-danger' : 'badge-warning'}`}>
                           {rule.severity}
                         </span>
@@ -176,7 +176,7 @@ export default function DigitalTwin() {
           <div className="card" style={{ maxWidth: '700px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', padding: '24px' }}>
               <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '20px' }}>Reasoning Chain</h3>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '20px' }}>{t('dt.reasoningChain', 'Reasoning Chain')}</h3>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px' }}>{selectedRule.obligationTitle}</p>
               </div>
               <button onClick={() => setSelectedRule(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
@@ -192,7 +192,7 @@ export default function DigitalTwin() {
                 </p>
               </div>
 
-              <h4 style={{ fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.05em', marginBottom: '16px' }}>Evaluation Trace</h4>
+              <h4 style={{ fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.05em', marginBottom: '16px' }}>{t('dt.evalTrace', 'Evaluation Trace')}</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
                 
                 {/* 1. Profile Attribute */}
@@ -201,7 +201,7 @@ export default function DigitalTwin() {
                     1
                   </div>
                   <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', flex: 1 }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Business Profile</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{t('dt.businessProfile', 'Business Profile')}</span>
                     {selectedRule.conditionsMatched?.map((cond: any, i: number) => (
                       <div key={i} style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
                         <span style={{ fontWeight: 600 }}>{cond.readableField}</span> = {String(cond.actualValue)}
@@ -216,10 +216,10 @@ export default function DigitalTwin() {
                     2
                   </div>
                   <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', flex: 1 }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Rule Condition</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{t('dt.ruleCondition', 'Rule Condition')}</span>
                     {selectedRule.conditionsMatched?.map((cond: any, i: number) => (
                       <div key={i} style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
-                        Required: <span style={{ fontWeight: 600 }}>{cond.readableField} {cond.operator} {String(cond.expectedValue)}</span>
+                        {t('dt.required', 'Required:')} <span style={{ fontWeight: 600 }}>{cond.readableField} {cond.operator} {String(cond.expectedValue)}</span>
                       </div>
                     ))}
                   </div>
@@ -231,8 +231,8 @@ export default function DigitalTwin() {
                     <CheckCircle size={16} />
                   </div>
                   <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.2)', flex: 1 }}>
-                    <span style={{ fontSize: '12px', color: 'var(--success)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Outcome</span>
-                    <div style={{ fontSize: '14px', color: 'var(--success)', fontWeight: 'bold' }}>Rule Triggered: APPLIES</div>
+                    <span style={{ fontSize: '12px', color: 'var(--success)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>{t('dt.outcome', 'Outcome')}</span>
+                    <div style={{ fontSize: '14px', color: 'var(--success)', fontWeight: 'bold' }}>{t('dt.ruleTriggered', 'Rule Triggered: APPLIES')}</div>
                   </div>
                 </div>
 

@@ -270,11 +270,11 @@ function evaluateRules(businessProfile, rulesFromDb = []) {
       : rule; // Fall back to rule object properties if not populated
       
     const realSource = {
-      sourceName: sourceData.sourceName || 'NOT AVAILABLE IN GAWK',
-      actName: sourceData.actName || 'NOT AVAILABLE IN GAWK',
-      sectionNumber: sourceData.sectionNumber || sourceData.section || 'NOT AVAILABLE IN GAWK',
-      authority: sourceData.authority || sourceData.regulator || 'NOT AVAILABLE IN GAWK',
-      officialUrl: sourceData.officialUrl || sourceData.sourceUrl || 'NOT AVAILABLE IN GAWK',
+      sourceName: sourceData.sourceName || 'NOT AVAILABLE IN SURAKSHA RULES',
+      actName: sourceData.actName || 'NOT AVAILABLE IN SURAKSHA RULES',
+      sectionNumber: sourceData.sectionNumber || sourceData.section || 'NOT AVAILABLE IN SURAKSHA RULES',
+      authority: sourceData.authority || sourceData.regulator || 'NOT AVAILABLE IN SURAKSHA RULES',
+      officialUrl: sourceData.officialUrl || sourceData.sourceUrl || 'NOT AVAILABLE IN SURAKSHA RULES',
       effectiveDate: sourceData.effectiveDate || sourceData.effectiveFrom || null,
       lastVerifiedDate: sourceData.lastVerifiedDate || new Date().toISOString(),
       verificationStatus: sourceData.verificationStatus || 'PENDING_REVIEW'

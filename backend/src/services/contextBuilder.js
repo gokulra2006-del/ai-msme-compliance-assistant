@@ -160,11 +160,11 @@ exports.buildContext = async (businessId, userQuestion, simulationId = null) => 
           : null
       }
     })),
-    // Required-evidence status. Requirements come ONLY from the GAWK-derived
+    // Required-evidence status. Requirements come ONLY from the Suraksha Rules-derived
     // ruleset — this list is a REGULATORY REQUIREMENT read from stored records,
     // which is a different kind of fact from the document contents above.
     evidenceRequirements: {
-      informationSource: 'GAWK_DERIVED_RULESET',
+      informationSource: 'Suraksha Rules_DERIVED_RULESET',
       summary: evidenceIntelligence.summary,
       requirements: evidenceIntelligence.requiredDocuments.map(row => ({
         obligationCode: row.obligationCode,
@@ -174,12 +174,12 @@ exports.buildContext = async (businessId, userQuestion, simulationId = null) => 
         satisfied: row.satisfied,
         expiryStatus: row.expiryStatus,
         expiryDate: row.expiryDate,
-        // Evidence -> Obligation -> Rule -> Regulatory Source -> GAWK reference
+        // Evidence -> Obligation -> Rule -> Regulatory Source -> Suraksha Rules reference
         traceability: {
           actName: row.traceability?.actName || INSUFFICIENT_DATA,
           section: row.traceability?.section || INSUFFICIENT_DATA,
           authority: row.traceability?.authority || INSUFFICIENT_DATA,
-          gawkReference: row.traceability?.gawkReference || INSUFFICIENT_DATA
+          surakshaRulesReference: row.traceability?.surakshaRulesReference || INSUFFICIENT_DATA
         }
       })),
       expiringEvidence: evidenceIntelligence.expiringEvidence,
@@ -211,7 +211,7 @@ exports.buildContext = async (businessId, userQuestion, simulationId = null) => 
       constraints: [
         'Use ONLY the data in upcomingRegulatoryChanges to explain regulatory updates.',
         'DO NOT invent amendments, penalties, deadlines, affected businesses, or legal consequences.',
-        'If asked about a penalty or change consequence not explicitly listed, respond with "INSUFFICIENT_DATA — Not available in the GAWK ruleset."',
+        'If asked about a penalty or change consequence not explicitly listed, respond with "INSUFFICIENT_DATA — Not available in the Suraksha Rules engine."',
         'Always cite the Source, Act, and Effective Date when describing a change.',
         'Do not assume a change affects the business if businessImpact says "No direct business impact found in analysis".'
       ]

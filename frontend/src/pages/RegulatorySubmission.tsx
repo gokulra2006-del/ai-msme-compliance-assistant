@@ -26,6 +26,7 @@ const RegulatorySubmission = () => {
   const [ackDate, setAckDate] = useState('');
   const [notes, setNotes] = useState('');
   const [evidenceId, setEvidenceId] = useState('');
+  const [showRecordModal, setShowRecordModal] = useState(false);
 
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
@@ -118,7 +119,7 @@ const RegulatorySubmission = () => {
             <h1 className="page-title">{t('submissions.title', 'Regulatory Submission Assistance')}</h1>
             <p className="page-subtitle">{action?.title || data?.obligation?.title || 'Loading...'}</p>
           </div>
-          <button className="btn btn-outline btn-sm" onClick={() => navigate(-1)}>Back</button>
+          <button className="btn btn-outline btn-sm" onClick={() => navigate(-1)}>{t("ui.back", "Back")}</button>
         </div>
 
         {error && <div className="error-box">{error}</div>}
@@ -138,7 +139,7 @@ const RegulatorySubmission = () => {
               <section className="card">
                 <h2 className="card-title">Submission Details</h2>
                 <div className="document-details">
-                  <div><dt>Authority</dt><dd>{data.authority || 'INFORMATION UNAVAILABLE'}</dd></div>
+                  <div><dt>{t('obl.authority', 'Authority')}</dt><dd>{data.authority || 'INFORMATION UNAVAILABLE'}</dd></div>
                   <div><dt>Status</dt><dd><span className="badge badge-accent">{data.submissionStatus}</span></dd></div>
                   <div><dt>Official Portal</dt><dd>
                     {data.officialPortalUrl ? (
@@ -292,7 +293,7 @@ const RegulatorySubmission = () => {
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                  <button type="button" className="btn btn-outline" onClick={() => setShowRecordModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowRecordModal(false)}>{t("ui.cancel", "Cancel")}</button>
                   <button type="submit" className="btn btn-primary" disabled={working === 'record'}>
                     {working === 'record' ? 'Saving...' : 'Confirm Submission'}
                   </button>

@@ -8,7 +8,7 @@ const {
   buildDraftContent
 } = require('../services/documentPreparationService');
 const { generateDocumentDraft } = require('../services/aiProvider');
-const { loadGawkContext } = require('../utils/gawkLoader');
+const { loadRulesContext } = require('../utils/rulesLoader');
 
 async function getUserBusiness(userId) {
   return Business.findOne({ user: userId });
@@ -111,7 +111,7 @@ exports.generateDraft = async (req, res) => {
 
     let draftContent = '';
     try {
-      const gawkContext = await loadGawkContext();
+      const gawkContext = await loadRulesContext();
       draftContent = await generateDocumentDraft(
         snapshot.profile.map(p => ({ label: p.label, value: p.value })),
         snapshot.rule,

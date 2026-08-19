@@ -101,7 +101,7 @@ async function calculateRiskScore(businessId) {
     }
 
     // Required Evidence Check.
-    // The list of required documents comes only from the GAWK-derived record the
+    // The list of required documents comes only from the Suraksha Rules-derived record the
     // Rules Engine produced — nothing here invents a document requirement.
     if (action.evidenceRequired && action.evidenceRequired.length > 0) {
       let obligationHasAnyEvidence = false;

@@ -39,14 +39,25 @@ const Dashboard = () => {
             axios.get(`${API}/business/activity`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: [] } })),
             axios.get(`${API}/notifications/alerts-summary`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: null } }))
           ]);
-          
-          // FORCED DEMO DATA FOR PRESENTATION
-          setData(DEMO_DASHBOARD);
-          setRiskData(DEMO_RISK);
+          // Map real API data to the dashboard state
+          setData({
+            hasProfile: true, 
+            applies: oblRes.data?.data?.applies || 0,
+            doesNotApply: oblRes.data?.data?.doesNotApply || 0,
+            insufficientData: oblRes.data?.data?.insufficientData || 0,
+            riskBreakdown: oblRes.data?.data?.riskBreakdown || { critical: 0, high: 0, medium: 0, low: 0 },
+            applicableObligations: oblRes.data?.data?.applicableObligations || [],
+            evidence: evRes.data?.data || { summary: {}, requiredDocuments: [] },
+            calendar: calRes.data?.data || { totalApplicable: 0, completed: 0, pending: 0, overdue: 0, dueSoon: 0, upcoming: [] },
+            alerts: alertsRes.data?.data || { overdue: 0, dueToday: 0, dueSoon: 0, escalations: 0, expiredEvidence: 0, pendingReview: 0, rejected: 0 },
+            history: historyRes.data?.data || [],
+            activity: activityRes.data?.data || []
+          });
+          setRiskData(riskRes.data?.data || null);
         }
       } catch (err: any) {
         if (err.response?.status === 401) { logout(); navigate('/login'); return; }
-        console.warn('[Dashboard] API unavailable, using demo data.');
+        console.warn('[Dashboard] API failed, using demo data as fallback.', err);
         setData(DEMO_DASHBOARD);
         setRiskData(DEMO_RISK);
       } finally {
@@ -110,21 +121,21 @@ const Dashboard = () => {
         <div>
               <div className="metrics-row mb-24">
                 <div className="card metric-card">
-                  <div className="card-title micro">Total Users</div>
+                  <div className="card-title micro">{t("admin.totalUsers", "Total Users")}</div>
                   <div className="metric-value">{adminData?.totalUsers || 0}</div>
                 </div>
                 <div className="card metric-card">
-                  <div className="card-title micro">Active Businesses</div>
+                  <div className="card-title micro">{t("admin.activeBusinesses", "Active Businesses")}</div>
                   <div className="metric-value">{adminData?.activeBusinesses || 0}</div>
                 </div>
                 <div className="card metric-card">
-                  <div className="card-title micro">Active Rule Packs</div>
+                  <div className="card-title micro">{t("admin.activeRulePacks", "Active Rule Packs")}</div>
                   <div className="metric-value">{adminData?.totalRules || 0}</div>
                 </div>
               </div>
               
               <div className="card">
-                <h2 className="card-title">Recent System Activity</h2>
+                <h2 className="card-title">{t("admin.recentActivity", "Recent System Activity")}</h2>
                 {adminData?.recentActivity && adminData.recentActivity.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {adminData.recentActivity.map((log: any, i: number) => (
@@ -139,7 +150,7 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="empty-state" style={{ padding: '24px 0' }}>No recent activity.</div>
+                  <div className="empty-state" style={{ padding: '24px 0' }}>{t("admin.noRecentActivity", "No recent activity.")}</div>
                 )}
               </div>
             </div>
@@ -154,7 +165,7 @@ const Dashboard = () => {
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <h2 className="card-title" style={{ fontSize: '1.5rem', marginBottom: '16px' }}>No business profile configured yet</h2>
+              <h2 className="card-title" style={{ fontSize: '1.5rem', marginBottom: '16px' }}>{t("dash.noBusinessProfile", "No business profile configured yet")}</h2>
               <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', marginBottom: '32px', lineHeight: 1.6 }}>
                 Complete your business profile to generate applicable compliance obligations. Our deterministic rules engine requires this information to accurately assess your regulatory requirements.
               </p>
@@ -186,7 +197,7 @@ const Dashboard = () => {
                 </Link>
                 <Link to="/updates/impact" className="dashboard-action-pill">
                   <FileText size={18} />
-                  <span>View Regulatory Impacts</span>
+                  <span>{t("dash.viewRegulatoryImpacts", "View Regulatory Impacts")}</span>
                 </Link>
                 <Link to="/digital-twin" className="dashboard-action-pill">
                   <ShieldCheck size={18} />
@@ -300,7 +311,7 @@ const Dashboard = () => {
                 </div>
 
                 <div style={{ paddingRight: '24px', borderRight: '1px solid var(--border)' }}>
-                  <h3 className="card-title micro" style={{ marginBottom: '16px', textTransform: 'uppercase' }}>Risk Drivers</h3>
+                  <h3 className="card-title micro" style={{ marginBottom: '16px', textTransform: 'uppercase' }}>{t("dash.riskDrivers", "Risk Drivers")}</h3>
                   {displayRiskData.riskDrivers && displayRiskData.riskDrivers.length > 0 ? (
                     <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
                       {displayRiskData.riskDrivers.map((driver: string, idx: number) => (
@@ -308,12 +319,12 @@ const Dashboard = () => {
                       ))}
                     </ul>
                   ) : (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>0 risk drivers.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>{t("dash.zeroRiskDrivers", "0 risk drivers.")}</p>
                   )}
                 </div>
 
                 <div>
-                  <h3 className="card-title micro" style={{ marginBottom: '16px', textTransform: 'uppercase' }}>Recommended Actions</h3>
+                  <h3 className="card-title micro" style={{ marginBottom: '16px', textTransform: 'uppercase' }}>{t("dash.recommendedActions", "Recommended Actions")}</h3>
                   {displayRiskData.recommendedActions && displayRiskData.recommendedActions.length > 0 ? (
                     <ol style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
                       {displayRiskData.recommendedActions.map((action: string, idx: number) => (
@@ -325,7 +336,7 @@ const Dashboard = () => {
                     </ol>
                   ) : (
                     <>
-                      <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', margin: '0 0 12px 0' }}>No immediate risk-reduction action identified.</p>
+                      <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', margin: '0 0 12px 0' }}>{t("dash.noRiskAction", "No immediate risk-reduction action identified.")}</p>
                       <button className="btn btn-outline btn-sm" onClick={() => setShowRiskBreakdown(true)}>{t('ui.review', 'Review')}</button>
                     </>
                   )}
@@ -414,7 +425,7 @@ const Dashboard = () => {
                               {action.dueDate ? `In ${daysRemaining} days` : `Frequency: ${action.frequency}`}
                             </div>
                             {action._id && (
-                              <Link to={`/submissions/${action._id}`} className="btn btn-primary btn-sm" style={{ marginTop: '12px', padding: '4px 12px', fontSize: '0.8rem' }}>View Submission</Link>
+                              <Link to={`/submissions/${action._id}`} className="btn btn-primary btn-sm" style={{ marginTop: '12px', padding: '4px 12px', fontSize: '0.8rem' }}>{t("dash.viewSubmission", "View Submission")}</Link>
                             )}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
@@ -490,7 +501,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>No applicable compliance actions available yet.</div>
+                <div className="empty-state" style={{ padding: '24px 0' }}>{t("dash.noApplicableActions", "No applicable compliance actions available yet.")}</div>
               )}
             </div>
           </div>

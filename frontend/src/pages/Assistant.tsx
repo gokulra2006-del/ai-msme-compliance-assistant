@@ -45,7 +45,7 @@ const statusFromVerification = (verificationStatus?: string | null): string => {
  */
 const renderDocStatusBadge = (row: EvidenceRow) => {
   switch (row.status) {
-    case 'MISSING': return <span className="badge badge-red">Missing</span>;
+    case 'MISSING': return <span className="badge badge-red">{t('assistant.missing', 'Missing')}</span>;
     case 'EXPIRED': return <span className="badge badge-red">Expired</span>;
     case 'REJECTED': return <span className="badge badge-red">Rejected</span>;
     case 'UNDER_REVIEW': return <span className="badge badge-blue">Under review</span>;
@@ -100,7 +100,7 @@ const DetailRow = ({ label, value }: { label: string; value?: string | null }) =
 
 /**
  * Obligation → required evidence, as one list. Shared by the category view and
- * the search results so both read the same way and stay in step.
+ * the search {t('assistant.resultsPlural', 'results')} so both read the same way and stay in step.
  */
 const DocGroupList = ({
   groups,
@@ -649,7 +649,7 @@ const Assistant = () => {
                     <ArrowLeft size={14} /> Back to {backLabel}
                   </button>
                 )}
-                <h1 className="docs-hub__title">Documents</h1>
+                <h1 className="docs-hub__title">{t('assistant.documents', 'Documents')}</h1>
                 <p className="docs-hub__subtitle">
                   {isChatting
                     ? 'Answers are grounded in the verified obligations and documents on your SurakshaSetu profile.'
@@ -673,7 +673,7 @@ const Assistant = () => {
                     <input
                       type="text"
                       className="docs-hub__search-input"
-                      placeholder="Search documents or ask a question (e.g., What is GST Registration Certificate?)"
+                      placeholder={t('assistant.searchPlaceholder', 'Search documents or ask a question (e.g., What is GST Registration Certificate?)')}
                       value={docQuery}
                       onChange={e => setDocQuery(e.target.value)}
                       onKeyDown={e => {
@@ -740,7 +740,7 @@ const Assistant = () => {
 
                       {msg.recommendedAction && (
                         <div className="docs-msg__action">
-                          <h4 className="docs-msg__action-title">Recommended action</h4>
+                          <h4 className="docs-msg__action-title">{t('assistant.recAction', 'Recommended action')}</h4>
                           <p className="docs-msg__action-text">{msg.recommendedAction}</p>
                         </div>
                       )}
@@ -830,11 +830,11 @@ const Assistant = () => {
                         <div className="docs-hub__topic-header-main">
                           <button type="button" className="docs-split__back" onClick={handleBack}>
                             <ArrowLeft size={16} />
-                            <span>Back to all<br/>categories</span>
+                            <span>{t('assistant.backToAll', 'Back to all')}<br/>{t('assistant.categories', 'categories')}</span>
                           </button>
                           <div className="docs-hub__topic-title-group">
                             <h2 className="docs-split__title">{activeTopic.question}</h2>
-                            <p className="docs-split__sub">Documents required by the applicable compliance rules for your business.</p>
+                            <p className="docs-split__sub">{t('assistant.docsRequiredBy', 'Documents required by the applicable compliance rules for your business.')}</p>
                           </div>
                         </div>
                         
@@ -843,7 +843,7 @@ const Assistant = () => {
                             <Search size={16} className="docs-split__search-icon" />
                             <input 
                               type="text" 
-                              placeholder="Search documents in this category..." 
+                              placeholder={t('assistant.searchCatPlaceholder', 'Search documents in this category...')} 
                               value={docQuery}
                               onChange={(e) => setDocQuery(e.target.value)}
                             />
@@ -857,43 +857,43 @@ const Assistant = () => {
                       <div className="docs-summary-dash">
                         <div className="docs-summary-card">
                           <span className="docs-summary-val">{activeTopicStats.total}</span>
-                          <span className="docs-summary-lbl">Total Documents</span>
+                          <span className="docs-summary-lbl">{t('assistant.totalDocs', 'Total Documents')}</span>
                         </div>
                         <div className="docs-summary-card docs-summary-card--missing">
                           <span className="docs-summary-val">{activeTopicStats.missing}</span>
-                          <span className="docs-summary-lbl">Missing</span>
+                          <span className="docs-summary-lbl">{t('assistant.missing', 'Missing')}</span>
                         </div>
                         <div className="docs-summary-card docs-summary-card--available">
                           <span className="docs-summary-val">{activeTopicStats.available}</span>
-                          <span className="docs-summary-lbl">Available</span>
+                          <span className="docs-summary-lbl">{t('assistant.available', 'Available')}</span>
                         </div>
                         <div className="docs-summary-card docs-summary-card--review">
                           <span className="docs-summary-val">{activeTopicStats.inReview}</span>
-                          <span className="docs-summary-lbl">In Review</span>
+                          <span className="docs-summary-lbl">{t('assistant.inReview', 'In Review')}</span>
                         </div>
                         <div className="docs-summary-card docs-summary-card--approved">
                           <span className="docs-summary-val">{activeTopicStats.approved}</span>
-                          <span className="docs-summary-lbl">Approved</span>
+                          <span className="docs-summary-lbl">{t('assistant.approved', 'Approved')}</span>
                         </div>
                       </div>
 
                       <div className="docs-filter-row">
                         <div className="docs-filter-tabs">
-                          <button className={`docs-filter-tab ${listFilter === 'all' ? 'active' : ''}`} onClick={() => setListFilter('all')}>All Status</button>
-                          <button className={`docs-filter-tab ${listFilter === 'MISSING' ? 'active' : ''}`} onClick={() => setListFilter('MISSING')}>Missing</button>
-                          <button className={`docs-filter-tab ${listFilter === 'AVAILABLE' ? 'active' : ''}`} onClick={() => setListFilter('AVAILABLE')}>Available</button>
-                          <button className={`docs-filter-tab ${listFilter === 'IN_REVIEW' ? 'active' : ''}`} onClick={() => setListFilter('IN_REVIEW')}>In Review</button>
-                          <button className={`docs-filter-tab ${listFilter === 'APPROVED' ? 'active' : ''}`} onClick={() => setListFilter('APPROVED')}>Approved</button>
+                          <button className={`docs-filter-tab ${listFilter === 'all' ? 'active' : ''}`} onClick={() => setListFilter('all')}>{t('assistant.allStatus', 'All Status')}</button>
+                          <button className={`docs-filter-tab ${listFilter === 'MISSING' ? 'active' : ''}`} onClick={() => setListFilter('MISSING')}>{t('assistant.missing', 'Missing')}</button>
+                          <button className={`docs-filter-tab ${listFilter === 'AVAILABLE' ? 'active' : ''}`} onClick={() => setListFilter('AVAILABLE')}>{t('assistant.available', 'Available')}</button>
+                          <button className={`docs-filter-tab ${listFilter === 'IN_REVIEW' ? 'active' : ''}`} onClick={() => setListFilter('IN_REVIEW')}>{t('assistant.inReview', 'In Review')}</button>
+                          <button className={`docs-filter-tab ${listFilter === 'APPROVED' ? 'active' : ''}`} onClick={() => setListFilter('APPROVED')}>{t('assistant.approved', 'Approved')}</button>
                         </div>
                         <div className="docs-sort-dropdown">
-                           Sort by: Priority <ChevronDown size={14} />
+                           {t('assistant.sortByPriority', 'Sort by: Priority')} <ChevronDown size={14} />
                         </div>
                       </div>
 
                       <div className="docs-master-list">
                         {filteredTopicRows.length === 0 ? (
                           <div className="doc-cat-empty">
-                            <strong>No documents match your filter.</strong>
+                            <strong>{t('assistant.noDocsMatch', 'No documents match your filter.')}</strong>
                           </div>
                         ) : (
                           filteredTopicRows.map((row, idx) => (
@@ -912,7 +912,7 @@ const Assistant = () => {
                               <div className="docs-master-row__content">
                                 <span className="docs-master-row__title">{row.evidence?.documentName || row.documentType}</span>
                                 <span className="docs-master-row__meta">
-                                  {row.obligationCode || 'Unlinked'} · {row.domain || 'General'} · {row.complianceFrequency || 'As required'}
+                                  {row.obligationCode || t('assistant.unlinked', 'Unlinked')} · {row.domain || t('assistant.general', 'General')} · {row.complianceFrequency || t('assistant.asRequired', 'As required')}
                                 </span>
                               </div>
                               <div className="docs-master-row__badges">
@@ -932,7 +932,7 @@ const Assistant = () => {
                       <div className="docs-hub__section-header">
                         <div>
                           <h2 className="docs-hub__section-title">
-                            {searchResultCount} result{searchResultCount === 1 ? '' : 's'} for “{trimmedDocQuery}”
+                            {searchResultCount} {t('assistant.resultSingular', 'result')}{searchResultCount === 1 ? '' : 's'} {t('assistant.for', 'for')} “{trimmedDocQuery}”
                           </h2>
                           <p className="docs-hub__section-sub">
                             Matched on document name, obligation and issuing authority.
@@ -961,28 +961,28 @@ const Assistant = () => {
                         </div>
                         <div className="doc-panel__heading">
                           <h2 className="doc-panel__title">{selectedRow.evidence?.documentName || selectedRow.documentType}</h2>
-                          <p className="doc-panel__ref">{selectedRow.obligationCode || 'Unlinked'} · {selectedRow.domain || 'General'} · {selectedRow.complianceFrequency || 'As required'}</p>
+                          <p className="doc-panel__ref">{selectedRow.obligationCode || t('assistant.unlinked', 'Unlinked')} · {selectedRow.domain || t('assistant.general', 'General')} · {selectedRow.complianceFrequency || t('assistant.asRequired', 'As required')}</p>
                         </div>
                         {selectedRow.severity && <span className={`badge ${SEVERITY_BADGE[selectedRow.severity] || 'badge-muted'}`}>{selectedRow.severity}</span>}
                       </div>
 
                       <div className="doc-panel__alert">
                         <div className="doc-panel__alert-icon"><ShieldCheck size={16} /></div>
-                        <p>This document is mandatory as per applicable compliance rules for your business.</p>
+                        <p>{t('assistant.mandatoryDoc', 'This document is mandatory as per applicable compliance rules for your business.')}</p>
                       </div>
 
                       <div className="doc-panel__section">
-                        <h3 className="doc-panel__section-title">About this document</h3>
-                        <p className="doc-panel__section-text">{whyRequired || 'No description available for this requirement.'}</p>
+                        <h3 className="doc-panel__section-title">{t('assistant.aboutDoc', 'About this document')}</h3>
+                        <p className="doc-panel__section-text">{whyRequired || t('assistant.noDesc', 'No description available for this requirement.')}</p>
                       </div>
 
                       {selectedRow.obligationCode && (
                         <div className="doc-panel__section">
-                          <h3 className="doc-panel__section-title">Related Obligation</h3>
+                          <h3 className="doc-panel__section-title">{t('assistant.relatedObl', 'Related Obligation')}</h3>
                           <div className="doc-panel__box">
                             <div className="doc-panel__box-content">
                               <strong>{selectedRow.obligationTitle}</strong>
-                              <span>Obligation ID: {selectedRow.obligationCode}</span>
+                              <span>{t('assistant.oblId', 'Obligation ID:')} {selectedRow.obligationCode}</span>
                             </div>
                             <ChevronRight size={16} className="doc-panel__box-arrow" />
                           </div>
@@ -990,13 +990,13 @@ const Assistant = () => {
                       )}
 
                       <div className="doc-panel__section">
-                        <h3 className="doc-panel__section-title">Required Evidence</h3>
+                        <h3 className="doc-panel__section-title">{t('assistant.reqEvidence', 'Required Evidence')}</h3>
                         <div className="doc-panel__box">
                           <div className="doc-panel__box-content">
                             <FileText size={16} className="doc-panel__box-icon" />
                             <div>
                               <strong>{selectedRow.evidence?.documentName || selectedRow.documentType}</strong>
-                              <span>{selectedRow.documentType} requirement</span>
+                              <span>{selectedRow.documentType} {t('assistant.requirement', 'requirement')}</span>
                             </div>
                           </div>
                           {renderDocStatusBadge(selectedRow)}
@@ -1006,17 +1006,17 @@ const Assistant = () => {
 
                       <div className="doc-panel__grid">
                         <div>
-                          <div className="doc-panel__label">Frequency</div>
-                          <div className="doc-panel__value">{selectedRow.complianceFrequency || 'Monthly'}</div>
+                          <div className="doc-panel__label">{t('assistant.freq', 'Frequency')}</div>
+                          <div className="doc-panel__value">{selectedRow.complianceFrequency || t('assistant.monthly', 'Monthly')}</div>
                         </div>
                         <div>
-                          <div className="doc-panel__label">Due Date</div>
-                          <div className="doc-panel__value">{formatDate(selectedRow.dueDate) || '10th of next month'}</div>
+                          <div className="doc-panel__label">{t('assistant.dueDate', 'Due Date')}</div>
+                          <div className="doc-panel__value">{formatDate(selectedRow.dueDate) || t('assistant.10thNextMonth', '10th of next month')}</div>
                         </div>
                       </div>
 
                       <div className="doc-panel__section">
-                        <div className="doc-panel__label">Source</div>
+                        <div className="doc-panel__label">{t('assistant.source', 'Source')}</div>
                         <div className="doc-panel__source">
                           Verified regulations in SurakshaSetu (GAWK) <ShieldCheck size={14} className="doc-panel__source-icon" />
                         </div>
@@ -1029,12 +1029,12 @@ const Assistant = () => {
                       <div className="doc-cat-ask">
                         <Info size={16} className="doc-cat-ask__icon" />
                         <div className="doc-cat-ask__content">
-                          <span className="doc-cat-ask__label">Ask about this document</span>
+                          <span className="doc-cat-ask__label">{t('assistant.askAboutDoc', 'Ask about this document')}</span>
                           <div className="doc-cat-ask__input-wrap">
                             <input
                               type="text"
                               className="doc-cat-ask__input"
-                              placeholder="e.g., What is the penalty for not having this?"
+                              placeholder={t('assistant.penaltyPlaceholder', 'e.g., What is the penalty for not having this?')}
                               value={customQuestion}
                               onChange={e => setCustomQuestion(e.target.value)}
                               onKeyDown={e => {
@@ -1070,9 +1070,9 @@ const Assistant = () => {
                   {renderDocStatusBadge(selectedRow)}
                 </div>
                 <div className="doc-detail__card">
-                  <div className="doc-detail__card-title">Document information</div>
+                  <div className="doc-detail__card-title">{t('assistant.docInfo', 'Document information')}</div>
                   <div className="doc-detail__grid">
-                    <DetailRow label="Requirement status" value={selectedRow.status} />
+                    <DetailRow label={t('assistant.reqStatus', 'Requirement status')} value={selectedRow.status} />
                   </div>
                 </div>
               </div>
@@ -1090,9 +1090,9 @@ const Assistant = () => {
 
                 {!docsError && docsHasProfile === false ? (
                   <div className="doc-cat-empty doc-cat-empty--action">
-                    <strong>Your business profile isn't set up yet.</strong>
+                    <strong>{t('assistant.noProfileTitle', 'Your business profile isn\'t set up yet.')}</strong>
                     <p>
-                      The deterministic engine works out which documents you need from your profile.
+                      The deterministic engine works out which documents you need from {t('assistant.yourProfile', 'your profile.')}
                       Until that is saved, there are no obligations to list here.
                     </p>
                     <button type="button" className="doc-cat-back" onClick={() => navigate('/onboarding')}>
@@ -1101,7 +1101,7 @@ const Assistant = () => {
                   </div>
                 ) : !docsError && docsLoaded && docs.length === 0 ? (
                   <div className="doc-cat-empty doc-cat-empty--action">
-                    <strong>No document requirements yet.</strong>
+                    <strong>{t('assistant.noReqsTitle', 'No document requirements yet.')}</strong>
                     <p>
                       The engine evaluated the active ruleset against your profile and no obligation
                       currently requires a document.
@@ -1114,10 +1114,10 @@ const Assistant = () => {
                   <>
                     <div className="docs-hub__section-header">
                       <div>
-                        <h2 className="docs-hub__section-title">Quick Access</h2>
+                        <h2 className="docs-hub__section-title">{t('assistant.quickAccess', 'Quick Access')}</h2>
                         <p className="docs-hub__section-sub">
                           {businessIndustry ? (
-                            <>Showing documents tailored for <strong>{businessIndustry}</strong>. Choose a category to find the right documents.</>
+                            <>Showing documents tailored for <strong>{businessIndustry}</strong>. {t('assistant.chooseCat', 'Choose a category to find the right documents.')}</>
                           ) : (
                             'Choose a category to find the right documents and get detailed answers.'
                           )}
@@ -1186,10 +1186,10 @@ const Assistant = () => {
                             <div className="docs-hub__quick-card-foot">
                               <span className={`docs-hub__quick-card-count${count > 0 ? ' has-docs' : ''}`}>
                                 {isLoading
-                                  ? 'Loading…'
+                                  ? t('ui.loading', 'Loading…')
                                   : count > 0
                                     ? `${count} document${count === 1 ? '' : 's'}`
-                                    : 'No documents'}
+                                    : t('assistant.noDocs', 'No documents')}
                               </span>
                               <ChevronRight size={15} className="docs-hub__quick-card-arrow" />
                             </div>
@@ -1200,12 +1200,12 @@ const Assistant = () => {
 
                     {docsUndecided > 0 && (
                       <p className="doc-cat-note">
-                        {docsUndecided} further rule{docsUndecided === 1 ? '' : 's'} could not be decided from
-                        your profile.{' '}
+                        {docsUndecided} {t('assistant.furtherRule', 'further rule')}{docsUndecided === 1 ? '' : 's'} {t('assistant.couldNotDecide', 'could not be decided from')}
+                        {t('assistant.yourProfile', 'your profile.')}{' '}
                         <button type="button" className="doc-cat-note__link" onClick={() => navigate('/onboarding')}>
                           Complete your profile
                         </button>{' '}
-                        to let the engine decide.
+                        {t('assistant.letEngineDecide', 'to let the engine decide.')}
                       </p>
                     )}
                   </>
@@ -1234,7 +1234,7 @@ const Assistant = () => {
                     className="docs-composer__input"
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
-                    placeholder={isListening ? 'Listening…' : 'Ask a question about any document…'}
+                    placeholder={isListening ? t('assistant.listening', 'Listening…') : t('assistant.askPlaceholder', 'Ask a question about any document…')}
                     disabled={isTyping}
                     aria-label="Ask a question about any document"
                   />

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import AppLayout from '../components/AppLayout';
-import { FileText, Edit3, Hourglass, CheckCircle, Search, Plus, Lightbulb, MessageSquare, ArrowRight } from 'lucide-react';
+import { Search, Plus, FileText } from 'lucide-react';
 import { DEMO_DOC_DASHBOARD } from '../demoData';
 
 const API = 'http://localhost:5000/api';
@@ -33,6 +33,22 @@ const DocumentPreparation = () => {
   const [selectedDraft, setSelectedDraft] = useState<any>(null);
   const [draftContent, setDraftContent] = useState('');
   const [changeReason, setChangeReason] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredActions = useMemo(() => {
+    if (!dashboardData?.actions) return [];
+    return dashboardData.actions.filter((action: any) => {
+      if (statusFilter !== 'ALL' && action.status !== statusFilter) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const titleMatch = (action.title || '').toLowerCase().includes(query);
+        const codeMatch = (action.ruleCode || '').toLowerCase().includes(query);
+        if (!titleMatch && !codeMatch) return false;
+      }
+      return true;
+    });
+  }, [dashboardData, statusFilter, searchQuery]);
 
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
   const canApprove = user?.role === 'ADMIN' || user?.role === 'COMPLIANCE_OFFICER';
@@ -168,7 +184,7 @@ const DocumentPreparation = () => {
             <div className="doc-prep-dash__header">
               <div className="doc-prep-dash__title-group">
                 <h1 className="page-title">{t('documents.dashboard', 'Document Preparation Dashboard')}</h1>
-              <p className="page-subtitle">Draft, manage, and prepare official documents in a few simple steps.</p>
+              <p className="page-subtitle">{t('documents.dashSubtitle', 'Draft, manage, and prepare official documents in a few simple steps.')}</p>
             </div>
           </div>
 
@@ -178,26 +194,26 @@ const DocumentPreparation = () => {
             <section className="doc-prep-dash__main card">
               <div className="doc-prep-dash__main-header">
               <div className="doc-prep-dash__main-title-group">
-                <h2 className="card-title">My Document Dashboard</h2>
-                <p className="doc-prep-dash__main-sub">Track your documents across all stages of preparation.</p>
+                <h2 className="card-title">{t('documents.myDash', 'My Document Dashboard')}</h2>
+                <p className="doc-prep-dash__main-sub">{t('documents.trackDocs', 'Track your documents across all stages of preparation.')}</p>
               </div>
               <div className="doc-prep-dash__main-controls">
                 <div className="doc-prep-dash__search">
                   <Search size={16} />
-                  <input type="text" placeholder="Search documents..." />
+                  <input type="text" placeholder={t('documents.searchPlaceholder', 'Search documents...')} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                 </div>
-                <select className="doc-prep-dash__status-select">
-                  <option value="ALL">All Status</option>
-                  <option value="NEEDED">Documents Needed</option>
-                  <option value="DRAFT">Drafts In Progress</option>
-                  <option value="REVIEW">Awaiting Review</option>
-                  <option value="APPROVED">Approved</option>
+                <select className="doc-prep-dash__status-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                  <option value="ALL">{t('documents.allStatus', 'All Status')}</option>
+                  <option value="NEEDED">{t('documents.docsNeeded', 'Documents Needed')}</option>
+                  <option value="DRAFT">{t('documents.draftsInProgress', 'Drafts In Progress')}</option>
+                  <option value="REVIEW">{t('documents.awaitingReview', 'Awaiting Review')}</option>
+                  <option value="APPROVED">{t('documents.approved', 'Approved')}</option>
                 </select>
               </div>
             </div>
 
             {/* Empty State when no documents */}
-            {(!dashboardData?.actions?.length) ? (
+            {(!filteredActions.length) ? (
               <div className="doc-prep-dash__empty">
                 <div className="doc-prep-dash__empty-icon">
                   <div className="doc-prep-dash__empty-folder">
@@ -205,23 +221,27 @@ const DocumentPreparation = () => {
                     <div className="doc-prep-dash__empty-sparkles">✨</div>
                   </div>
                 </div>
-                <h3 className="doc-prep-dash__empty-title">No documents yet</h3>
-                <p className="doc-prep-dash__empty-desc">You're all set! When the Assistant identifies documents you need,<br/>they will appear here for you to prepare.</p>
-                <button className="btn btn-accent doc-prep-dash__empty-btn" onClick={() => navigate('/obligations')}>
-                  <Plus size={16} /> Create New Document
-                </button>
-                <a href="#" className="doc-prep-dash__empty-link">Learn more about document preparation &rarr;</a>
+                <h3 className="doc-prep-dash__empty-title">{dashboardData?.actions?.length ? t('documents.noMatchFilters', 'No documents match your filters') : t('documents.noDocsYet', 'No documents yet')}</h3>
+                <p className="doc-prep-dash__empty-desc">{dashboardData?.actions?.length ? t('documents.tryAdjust', 'Try adjusting your search or status filter.') : t('documents.allSetMsg', 'You\'re all set! When the Assistant identifies documents you need,\nthey will appear here for you to prepare.')}</p>
+                {(!dashboardData?.actions?.length) && (
+                  <button className="btn btn-accent doc-prep-dash__empty-btn" onClick={() => navigate('/obligations')}>
+                    <Plus size={16} /> Create New Document
+                  </button>
+                )}
+                {(!dashboardData?.actions?.length) && (
+                  <a href="#" className="doc-prep-dash__empty-link">{t('documents.learnMore', 'Learn more about document preparation &rarr;')}</a>
+                )}
               </div>
             ) : (
               <div className="table-wrap doc-prep-dash__table-wrap">
                 <table className="doc-prep-dash__table">
-                  <thead><tr><th>Obligation</th><th>Status</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>{t("obl.obligation", "Obligation")}</th><th>{t('documents.statusCol', 'Status')}</th><th>{t('documents.actionsCol', 'Actions')}</th></tr></thead>
                   <tbody>
-                    {dashboardData.actions.map((action: any) => (
+                    {filteredActions.map((action: any) => (
                       <tr key={action._id}>
                         <td>{action.title || action.ruleCode}</td>
                         <td><span className="badge badge-muted">{action.status}</span></td>
-                        <td><button className="btn btn-outline btn-sm" onClick={() => navigate(`/document-preparation/${encodeURIComponent(action.ruleCode)}`)}>Prepare</button></td>
+                        <td><button className="btn btn-outline btn-sm" onClick={() => navigate(`/document-preparation/${encodeURIComponent(action.ruleCode)}`)}>{t('documents.prepareBtn', 'Prepare')}</button></td>
                       </tr>
                     ))}
                   </tbody>

@@ -9,15 +9,15 @@
  *
  * Those rows are built by backend/src/services/evidenceIntelligenceService.js,
  * which states its own grounding rules: requirements come only from
- * GAWK-derived records already in the database — `ComplianceRule.requiredEvidence`
+ * Suraksha Rules-derived records already in the database — `ComplianceRule.requiredEvidence`
  * and the `ComplianceAction` rows the deterministic Rules Engine produced.
- * Every seeded rule carries `sourceMetadata.officialUrl: 'NOT AVAILABLE IN GAWK'`
- * and a `traceability.gawkReference`, so the chain back to GAWK is in the data.
+ * Every seeded rule carries `sourceMetadata.officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES'`
+ * and a `traceability.surakshaRulesReference`, so the chain back to Suraksha Rules is in the data.
  *
  * Consequences of building the questions this way:
  *   - A topic with no matching rows is not rendered, so a question can never be
  *     shown that the underlying ruleset does not support.
- *   - Add, edit or remove a GAWK rule and the questions change by themselves.
+ *   - Add, edit or remove a Suraksha Rules rule and the questions change by themselves.
  *     There is no list of questions to maintain in lockstep with the ruleset.
  *   - The four "kind" groups partition the whole catalogue; whatever they do not
  *     claim falls to `OTHER`, which is appended last and cannot drift.
@@ -28,12 +28,12 @@
  */
 
 /** The backend's sentinel for a fact it will not guess at. Shown verbatim. */
-export const INSUFFICIENT_DATA = 'INSUFFICIENT_DATA — Not available in the GAWK ruleset.';
+export const INSUFFICIENT_DATA = 'INSUFFICIENT_DATA — Not available in the Suraksha Rules engine.';
 
 export const isInsufficient = (value?: string | null): boolean =>
   !value || value === INSUFFICIENT_DATA || value.startsWith('INSUFFICIENT_DATA');
 
-/** Evidence → Obligation → Rule → Regulatory Source → GAWK, as the backend builds it. */
+/** Evidence → Obligation → Rule → Regulatory Source → Suraksha Rules, as the backend builds it. */
 export interface Traceability {
   obligationCode: string;
   obligationTitle: string;
@@ -43,7 +43,7 @@ export interface Traceability {
   authority: string;
   officialUrl: string | null;
   sourceVerificationStatus: string;
-  gawkReference: string;
+  surakshaRulesReference: string;
   traceabilityComplete: boolean;
 }
 

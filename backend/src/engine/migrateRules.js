@@ -29,7 +29,7 @@ const originalRules = [
       sectionNumber: 'Section 31',
       authority: 'Food Safety and Standards Authority of India (State)',
       effectiveDate: new Date('2006-08-23'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -53,7 +53,7 @@ const originalRules = [
       sectionNumber: 'Regulation 2.1',
       authority: 'FSSAI (Central)',
       effectiveDate: new Date('2011-08-05'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -78,7 +78,7 @@ const originalRules = [
       sectionNumber: 'Section 6',
       authority: 'DISH Maharashtra',
       effectiveDate: new Date('1948-09-23'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -103,7 +103,7 @@ const originalRules = [
       sectionNumber: 'Section 7',
       authority: 'Directorate of Steam Boilers',
       effectiveDate: new Date('1924-01-01'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -127,7 +127,7 @@ const originalRules = [
       sectionNumber: 'Section 6',
       authority: 'EPFO',
       effectiveDate: new Date('1952-03-04'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -151,7 +151,7 @@ const originalRules = [
       sectionNumber: 'Section 38',
       authority: 'ESIC',
       effectiveDate: new Date('1948-04-19'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -176,7 +176,7 @@ const originalRules = [
       sectionNumber: 'Section 25',
       authority: 'MPCB',
       effectiveDate: new Date('1974-03-23'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -201,7 +201,7 @@ const originalRules = [
       sectionNumber: 'Rule 6',
       authority: 'MPCB',
       effectiveDate: new Date('2016-04-04'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -225,7 +225,7 @@ const originalRules = [
       sectionNumber: 'Section 22',
       authority: 'GST Council / CBIC',
       effectiveDate: new Date('2017-07-01'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -250,7 +250,7 @@ const originalRules = [
       sectionNumber: 'Section 7',
       authority: 'Labour Commissioner',
       effectiveDate: new Date('1970-09-05'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -275,7 +275,7 @@ const originalRules = [
       sectionNumber: 'Clause 3',
       authority: 'Agricultural Marketing Department',
       effectiveDate: new Date('1980-01-01'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   },
@@ -299,7 +299,7 @@ const originalRules = [
       sectionNumber: 'Rule 9',
       authority: 'CPCB',
       effectiveDate: new Date('2016-03-18'),
-      officialUrl: 'NOT AVAILABLE IN GAWK',
+      officialUrl: 'NOT AVAILABLE IN SURAKSHA RULES',
       verificationStatus: 'VERIFIED'
     }
   }

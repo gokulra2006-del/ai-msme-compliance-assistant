@@ -87,7 +87,7 @@ export default function SubmissionGuide() {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20, padding: 16, background: 'var(--bg-secondary)', borderRadius: 8 }}>
             <div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Authority</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('obl.authority', 'Authority')}</div>
               <div style={{ fontWeight: 500 }}>{action.category}</div>
             </div>
             <div>

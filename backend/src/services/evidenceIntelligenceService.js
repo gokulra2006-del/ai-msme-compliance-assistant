@@ -8,7 +8,7 @@
 // service, so none of them can disagree about a document's status.
 //
 // GROUNDING RULES (Prompt 16 §§9, 10, 31):
-//   * Requirements are read ONLY from GAWK-derived records already in the
+//   * Requirements are read ONLY from Suraksha Rules-derived records already in the
 //     database — ComplianceRule.requiredEvidence and the ComplianceAction rows
 //     the deterministic Rules Engine produced. Nothing here invents a document
 //     type, an expiry period, or a regulatory requirement.
@@ -69,7 +69,7 @@ function activeEvidenceFilter(businessId) {
 /**
  * Builds the catalogue of required documents for a business.
  *
- * Two GAWK-derived sources are merged:
+ * Two Suraksha Rules-derived sources are merged:
  *   1. ComplianceAction rows the Rules Engine persisted (carry due date/assignee)
  *   2. A live Rules Engine evaluation of ACTIVE ComplianceRules
  *
@@ -120,7 +120,7 @@ async function buildRequirementCatalogue(business) {
       actionId: extra.actionId || null,
       actionStatus: extra.actionStatus || null,
       requirementSources: [extra.requirementSource].filter(Boolean),
-      // Evidence -> Obligation -> Rule -> Regulatory Source -> GAWK reference
+      // Evidence -> Obligation -> Rule -> Regulatory Source -> Suraksha Rules reference
       traceability: buildTraceability({ rule, obligationCode })
     });
   };
@@ -436,7 +436,7 @@ async function getObligationEvidenceStatus({ business, obligationCode, requiredE
 
   const action = await ComplianceAction.findOne({ business: business._id, ruleCode: obligationCode }).lean();
 
-  // Requirements come only from stored GAWK-derived records (or an explicit list
+  // Requirements come only from stored Suraksha Rules-derived records (or an explicit list
   // the caller already read from one). Never from an assumption.
   const documentTypes = [...new Set([
     ...(requiredEvidence || []),
@@ -468,7 +468,7 @@ async function getObligationEvidenceStatus({ business, obligationCode, requiredE
     // No requirement on record is reported as such rather than as "compliant".
     hasRequirements: checklist.length > 0,
     noRequirementNotice: checklist.length === 0
-      ? 'No required evidence is recorded for this obligation in the GAWK ruleset.'
+      ? 'No required evidence is recorded for this obligation in the Suraksha Rules engine.'
       : null,
     missing: checklist.filter(row => row.status === 'MISSING').map(row => row.documentType),
     expired: checklist.filter(row => row.status === 'EXPIRED').map(row => row.documentType),

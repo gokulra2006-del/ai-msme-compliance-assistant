@@ -441,7 +441,7 @@ exports.getEvidence = async (req, res) => {
       data: {
         ...decorate(evidence),
         fileAvailable: storedFileExists(evidence.filePath),
-        // Evidence -> Obligation -> Rule -> Regulatory Source -> GAWK reference
+        // Evidence -> Obligation -> Rule -> Regulatory Source -> Suraksha Rules reference
         traceability: buildTraceability({ rule, obligationCode: evidence.obligationCode }),
         versions,
         versionCount: versions.length,

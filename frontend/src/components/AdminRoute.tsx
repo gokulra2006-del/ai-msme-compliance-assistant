@@ -6,7 +6,7 @@ const AdminRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Loading...</div>;
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">{t("ui.loading", "Loading...")}</div>;
   }
 
   if (!user || user.role !== 'ADMIN') {

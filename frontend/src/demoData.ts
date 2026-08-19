@@ -98,6 +98,7 @@ export const DEMO_RISK = {
 // ─── Evidence Vault ──────────────────────────────────────────────────────────
 
 export const DEMO_EVIDENCE_DASHBOARD = {
+  hasProfile: true,
   summary: { total: 8, verified: 3, pending: 1, missing: 2, expiringSoon: 1, expired: 1 },
   requiredDocuments: [
     {
@@ -170,10 +171,10 @@ export const DEMO_AUDIT_LOGS = [
 
 export const DEMO_DOC_DASHBOARD = {
   actions: [
-    { _id: 'doc-1', title: 'GST Return Filing Template', ruleCode: 'GST-3B-MONTHLY', status: 'DRAFT' },
-    { _id: 'doc-2', title: 'Fire NOC Renewal Application', ruleCode: 'FIRE-NOC', status: 'NEEDED' },
-    { _id: 'doc-3', title: 'EPF Monthly Contribution Statement', ruleCode: 'EPF-MONTHLY', status: 'APPROVED' },
-    { _id: 'doc-4', title: 'Pollution Control Board Re-Application', ruleCode: 'PCB-CONSENT', status: 'DRAFT' },
-    { _id: 'doc-5', title: 'Factory License Renewal Form', ruleCode: 'FACTORY-LIC', status: 'NEEDED' },
+    { _id: 'doc-1', title: 'Food Safety (FSSAI) License Application', ruleCode: 'FSSAI-001', status: 'DRAFT' },
+    { _id: 'doc-2', title: 'Factory Registration (Form 2)', ruleCode: 'FACTORY-001', status: 'NEEDED' },
+    { _id: 'doc-3', title: 'Contract Labour (CLRA) Register', ruleCode: 'CLRA-001', status: 'APPROVED' },
+    { _id: 'doc-4', title: 'Boiler Safety Audit Report', ruleCode: 'BOILER-001', status: 'DRAFT' },
+    { _id: 'doc-5', title: 'Employee State Insurance (ESIC) Return', ruleCode: 'ESIC-001', status: 'NEEDED' },
   ],
 };

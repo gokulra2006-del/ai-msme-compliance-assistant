@@ -2349,37 +2349,6 @@ tr:last-child td {
   outline: none;
 }
 
-.doc-prep-dash__pills {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.doc-prep-dash__pill {
-  padding: 6px 16px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #64748b;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.doc-prep-dash__pill:hover {
-  background: #f8fafc;
-  color: #334155;
-}
-
-.doc-prep-dash__pill.active {
-  background: #f0fdf4;
-  border-color: #10b981;
-  color: #059669;
-}
-
 .doc-prep-dash__empty {
   display: flex;
   flex-direction: column;

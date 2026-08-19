@@ -87,7 +87,7 @@ const Obligations = () => {
         <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
           <div className="form-group" style={{ margin: 0 }}>
             <select className="form-input" value={filter} onChange={e => setFilter(e.target.value)} style={{ minWidth: '180px' }}>
-              <option value="ALL">All Applicability</option>
+              <option value="ALL">{t("obl.allApplicability", "All Applicability")}</option>
               <option value="APPLIES">{t('status.APPLIES')}</option>
               <option value="DOES_NOT_APPLY">{t('status.DOES_NOT_APPLY')}</option>
               <option value="INSUFFICIENT_DATA">{t('status.INSUFFICIENT_DATA')}</option>
@@ -95,7 +95,7 @@ const Obligations = () => {
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <select className="form-input" value={domainFilter} onChange={e => setDomainFilter(e.target.value)} style={{ minWidth: '180px' }}>
-              {domains.map(d => <option key={d} value={d}>{d === 'ALL' ? 'All Domains' : d}</option>)}
+              {domains.map(d => <option key={d} value={d}>{d === 'ALL' ? t('obl.allDomains', 'All Domains') : d}</option>)}
             </select>
           </div>
         </div>
@@ -106,12 +106,12 @@ const Obligations = () => {
             <table>
               <thead>
                 <tr>
-                  <th>Code</th>
-                  <th>Obligation</th>
-                  <th>Domain</th>
-                  <th>Severity</th>
-                  <th>Applicability</th>
-                  <th>Cadence</th>
+                  <th>{t("obl.code", "Code")}</th>
+                  <th>{t("obl.obligation", "Obligation")}</th>
+                  <th>{t("obl.domain", "Domain")}</th>
+                  <th>{t("obl.severity", "Severity")}</th>
+                  <th>{t("obl.applicability", "Applicability")}</th>
+                  <th>{t("obl.cadence", "Cadence")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,27 +158,27 @@ const Obligations = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', margin: '32px 0' }}>
               <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '4px' }}>Domain</div>
+                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '4px' }}>{t('obl.domain', 'Domain')}</div>
                 <div style={{ fontWeight: 600 }}>{selected.domain}</div>
               </div>
               <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '4px' }}>Cadence</div>
+                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '4px' }}>{t('obl.cadence', 'Cadence')}</div>
                 <div style={{ fontWeight: 600 }}>{selected.cadence}</div>
               </div>
               <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '4px' }}>Severity</div>
+                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '4px' }}>{t('obl.severity', 'Severity')}</div>
                 <div style={{ fontWeight: 600 }}>{t(`risk.${selected.severity}`) || selected.severity}</div>
               </div>
             </div>
 
             <div className="card" style={{ marginBottom: '24px', padding: '24px 32px', borderLeft: `4px solid ${selected.status === 'APPLIES' ? 'var(--danger)' : selected.status === 'DOES_NOT_APPLY' ? 'var(--success)' : 'var(--warning)'}` }}>
               <div className="card-title micro" style={{ color: 'inherit' }}>
-                {selected.status === 'APPLIES' && 'Why this applies'}
-                {selected.status === 'DOES_NOT_APPLY' && 'Why this does not apply'}
-                {selected.status === 'INSUFFICIENT_DATA' && 'Information required'}
+                {selected.status === 'APPLIES' && t('obl.whyApplies', 'Why this applies')}
+                {selected.status === 'DOES_NOT_APPLY' && t('obl.whyNotApplies', 'Why this does not apply')}
+                {selected.status === 'INSUFFICIENT_DATA' && t('obl.infoRequired', 'Information required')}
               </div>
               <p style={{ fontSize: '0.95rem', marginBottom: '24px', fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                {selected.explanation || 'Explanation not available.'}
+                {selected.explanation || t('obl.explanationNotAvail', 'Explanation not available.')}
               </p>
 
               {selected.conditionsEvaluated && selected.conditionsEvaluated.length > 0 && (
@@ -216,7 +216,7 @@ const Obligations = () => {
               )}
 
               <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
-                <div className="card-title micro">Result</div>
+                <div className="card-title micro">{t('obl.result', 'Result')}</div>
                 <div style={{ fontWeight: 700, fontSize: '1.25rem', color: selected.status === 'APPLIES' ? 'var(--danger)' : selected.status === 'DOES_NOT_APPLY' ? 'var(--success)' : 'var(--warning)', letterSpacing: '-0.02em' }}>
                   {t(`status.${selected.status}`) || selected.status}
                 </div>
@@ -224,61 +224,61 @@ const Obligations = () => {
             </div>
 
             <div className="card" style={{ marginBottom: '24px', padding: '24px 32px', background: 'rgba(255,255,255,0.02)' }}>
-              <div className="card-title micro">Next Steps</div>
+              <div className="card-title micro">{t('obl.nextSteps', 'Next Steps')}</div>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                {selected.action || 'Review the obligation details and required evidence.'}
+                {selected.action || t('obl.reviewObligation', 'Review the obligation details and required evidence.')}
               </p>
             </div>
 
             <div className="card" style={{ marginBottom: '24px', padding: '24px 32px', background: 'rgba(255,255,255,0.015)' }}>
-              <div className="card-title micro">Description</div>
+              <div className="card-title micro">{t('obl.description', 'Description')}</div>
               <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>{selected.description}</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '0 8px', marginBottom: '32px' }}>
-              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>Authority</span><span className="value" style={{ fontWeight: 500 }}>{selected.authority || selected.regulator}</span></div>
-              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>Jurisdiction</span><span className="value" style={{ fontWeight: 500 }}>{selected.jurisdiction}</span></div>
-              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>Cadence</span><span className="value" style={{ fontWeight: 500 }}>{selected.cadence}</span></div>
-              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>Penalty</span><span className="value" style={{ color: 'var(--danger)', fontWeight: 500 }}>{selected.penalty || 'Not specified'}</span></div>
-              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>Imprisonment Risk</span><span className="value" style={{ fontWeight: 500 }}>{selected.imprisonmentFlag ? '⚠️ Yes' : 'No'}</span></div>
-              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>License Suspension</span><span className="value" style={{ fontWeight: 500 }}>{selected.licenceSuspensionFlag ? '⚠️ Yes' : 'No'}</span></div>
+              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>{t('obl.authority', 'Authority')}</span><span className="value" style={{ fontWeight: 500 }}>{selected.authority || selected.regulator}</span></div>
+              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>{t('obl.jurisdiction', 'Jurisdiction')}</span><span className="value" style={{ fontWeight: 500 }}>{selected.jurisdiction}</span></div>
+              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>{t('obl.cadence', 'Cadence')}</span><span className="value" style={{ fontWeight: 500 }}>{selected.cadence}</span></div>
+              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>{t('obl.penalty', 'Penalty')}</span><span className="value" style={{ color: 'var(--danger)', fontWeight: 500 }}>{selected.penalty || t('obl.notSpecified', t('obl.notSpecified', 'Not specified'))}</span></div>
+              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>{t('obl.imprisonmentRisk', 'Imprisonment Risk')}</span><span className="value" style={{ fontWeight: 500 }}>{selected.imprisonmentFlag ? '⚠️ Yes' : 'No'}</span></div>
+              <div className="detail-row" style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px' }}><span className="label" style={{ color: 'var(--text-muted)' }}>{t('obl.licenseSuspension', 'License Suspension')}</span><span className="value" style={{ fontWeight: 500 }}>{selected.licenceSuspensionFlag ? '⚠️ Yes' : 'No'}</span></div>
             </div>
 
             <div className="card" style={{ marginBottom: '24px', padding: '24px 32px', background: 'rgba(255,255,255,0.015)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div className="card-title micro" style={{ margin: 0 }}>Regulatory Source</div>
+                <div className="card-title micro" style={{ margin: 0 }}>{t('obl.regulatorySource', 'Regulatory Source')}</div>
                 {selected.regulatorySource && selected.regulatorySource.verificationStatus === 'VERIFIED' && (
-                  <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>✓ GAWK Verified</span>
+                  <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>✓ {t('obl.rulesVerified', 'Suraksha Rules Verified')}</span>
                 )}
               </div>
               
               {selected.regulatorySource ? (
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'grid', gap: '8px' }}>
-                  <div><strong>Source:</strong> {selected.regulatorySource.sourceName}</div>
-                  <div><strong>Act/Regulation:</strong> {selected.regulatorySource.actName}</div>
-                  <div><strong>Section:</strong> {selected.regulatorySource.sectionNumber}</div>
-                  <div><strong>Authority:</strong> {selected.regulatorySource.authority || selected.authority || selected.regulator}</div>
-                  {selected.regulatorySource.officialUrl && selected.regulatorySource.officialUrl !== 'NOT AVAILABLE IN GAWK' && (
+                  <div><strong>{t('obl.source', 'Source')}:</strong> {selected.regulatorySource.sourceName}</div>
+                  <div><strong>{t('obl.actRegulation', 'Act/Regulation')}:</strong> {selected.regulatorySource.actName}</div>
+                  <div><strong>{t('obl.section', 'Section')}:</strong> {selected.regulatorySource.sectionNumber}</div>
+                  <div><strong>{t('obl.authority', 'Authority')}:</strong> {selected.regulatorySource.authority || selected.authority || selected.regulator}</div>
+                  {selected.regulatorySource.officialUrl && selected.regulatorySource.officialUrl !== 'NOT AVAILABLE IN SURAKSHA RULES' && (
                     <div style={{ marginTop: '4px' }}>
                       <a href={selected.regulatorySource.officialUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-light)' }}>
                         View Official Source ↗
                       </a>
                     </div>
                   )}
-                  {selected.regulatorySource.officialUrl === 'NOT AVAILABLE IN GAWK' && (
+                  {selected.regulatorySource.officialUrl === 'NOT AVAILABLE IN SURAKSHA RULES' && (
                     <div style={{ marginTop: '4px', fontStyle: 'italic', color: 'var(--text-muted)' }}>
-                      Source URL not available in the GAWK ruleset.
+                      Source URL not available in the Suraksha Rules engine.
                     </div>
                   )}
                 </div>
               ) : (
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Source verification information is not available.</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('obl.sourceVerifNotAvail', 'Source verification information is not available.')}</div>
               )}
             </div>
 
             {selected.requiredEvidenceTypes?.length > 0 && (
               <div>
-                <div className="card-title" style={{ marginBottom: '8px' }}>Evidence</div>
+                <div className="card-title" style={{ marginBottom: '8px' }}>{t("obl.evidence", "Evidence")}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {selected.requiredEvidenceTypes.map((evType: string, i: number) => {
                     const uploadedMatch = evidenceMap[selected.code]?.find(e => e.documentType === evType);
@@ -295,12 +295,12 @@ const Obligations = () => {
                         {uploadedMatch ? (
                           <>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                              Expiry: {uploadedMatch.expiryDate ? new Date(uploadedMatch.expiryDate).toLocaleDateString() : 'None'} <br/>
-                              Verification: {t(`status.${uploadedMatch.verificationStatus}`) || uploadedMatch.verificationStatus}
+                              {t('obl.expiry', 'Expiry:')} {uploadedMatch.expiryDate ? new Date(uploadedMatch.expiryDate).toLocaleDateString() : 'None'} <br/>
+                              {t('obl.verification', 'Verification:')} {t(`status.${uploadedMatch.verificationStatus}`) || uploadedMatch.verificationStatus}
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                              <button className="btn btn-outline btn-sm" onClick={() => window.open(`http://localhost:5000/api/evidence/${uploadedMatch._id}/download?token=${token}`, '_blank')}>View File</button>
-                              <button className="btn btn-accent btn-sm" onClick={() => navigate('/evidence')}>Manage</button>
+                              <button className="btn btn-outline btn-sm" onClick={() => window.open(`http://localhost:5000/api/evidence/${uploadedMatch._id}/download?token=${token}`, '_blank')}>{t('obl.viewFile', 'View File')}</button>
+                              <button className="btn btn-accent btn-sm" onClick={() => navigate('/evidence')}>{t('obl.manage', 'Manage')}</button>
                             </div>
                           </>
                         ) : (

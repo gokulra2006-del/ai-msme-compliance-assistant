@@ -260,7 +260,7 @@ const ComplianceCalendar = () => {
               </div>
 
               <div className="card" style={{ marginBottom: '24px', padding: '24px 32px', background: 'rgba(255,255,255,0.015)' }}>
-                <div className="card-title micro">Description</div>
+                <div className="card-title micro">{t('obl.description', 'Description')}</div>
                 <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>{selectedAction.description}</p>
               </div>
 
@@ -339,7 +339,7 @@ const ComplianceCalendar = () => {
                       onChange={e => setRejectReason(e.target.value)}
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                      <button className="btn btn-outline" onClick={() => setShowRejectModal(false)}>Cancel</button>
+                      <button className="btn btn-outline" onClick={() => setShowRejectModal(false)}>{t("ui.cancel", "Cancel")}</button>
                       <button className="btn btn-accent" style={{ background: 'var(--danger)' }} onClick={() => handleWorkflow(selectedAction._id, 'REJECT')}>Confirm Reject</button>
                     </div>
                  </div>

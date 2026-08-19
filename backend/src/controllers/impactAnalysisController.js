@@ -49,7 +49,7 @@ exports.analyzeImpact = async (req, res) => {
       version: rule.version,
       matchReason: `Scope match`,
       impactCategory: 'MODIFIED',
-      sourceAct: rule.regulatorySource?.actName || update.source?.actName || 'Not available in the GAWK ruleset.'
+      sourceAct: rule.regulatorySource?.actName || update.source?.actName || 'Not available in the Suraksha Rules engine.'
     }));
 
     // 2. Identify Affected Businesses

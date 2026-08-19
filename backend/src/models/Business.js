@@ -4,6 +4,7 @@ const BusinessSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   
   // Basic Info
+  companyName: { type: String },
   entityType: { type: String }, // e.g., Proprietorship, Private Limited
   udyamRegistration: { type: String },
   udyamRegistrationStatus: { type: Boolean },

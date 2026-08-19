@@ -85,10 +85,9 @@ const EvidenceVault = () => {
         axios.get(`${API}/evidence?latest=true`, { headers }),
         axios.get(`${API}/obligations`, { headers })
       ]);
-      // FORCED DEMO DATA FOR PRESENTATION
-      setDashboard(DEMO_EVIDENCE_DASHBOARD);
-      setAllEvidence(DEMO_EVIDENCE_DASHBOARD.requiredDocuments);
-      setObligations([]);
+      setDashboard(dashRes.data.data);
+      setAllEvidence(evidenceRes.data.data);
+      setObligations(oblRes.data.data);
     } catch (err: any) {
       if (err.response?.status === 401) { logout(); navigate('/login'); return; }
       console.warn('[EvidenceVault] API unavailable, using demo data.');
@@ -332,8 +331,8 @@ const EvidenceVault = () => {
 
           {!dashboard?.hasProfile && (
             <div className="card mb-24" style={{ borderColor: 'var(--warning)' }}>
-              <p style={{ color: 'var(--warning)', fontWeight: 600 }}>⚠️ Complete your business profile first to see required documents.</p>
-              <button className="btn btn-accent btn-sm mt-16" onClick={() => navigate('/onboarding')}>Complete Profile →</button>
+              <p style={{ color: 'var(--warning)', fontWeight: 600 }}>{t('ev.completeProfile', '⚠️ Complete your business profile first to see required documents.')}</p>
+              <button className="btn btn-accent btn-sm mt-16" onClick={() => navigate('/onboarding')}>{t('ev.completeProfileBtn', 'Complete Profile →')}</button>
             </div>
           )}
 
@@ -378,7 +377,7 @@ const EvidenceVault = () => {
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-primary)', borderRadius: '6px' }}>
                     <div>
                       <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{doc.documentType}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Required for: {doc.obligationTitle}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('ev.requiredFor', 'Required for:')} {doc.obligationTitle}</div>
                     </div>
                     <button className="btn btn-accent btn-sm" onClick={() => openUpload({ obligationCode: doc.obligationCode, documentType: doc.documentType, documentName: doc.documentType })}>{t('ui.upload')}</button>
                   </div>
@@ -396,7 +395,7 @@ const EvidenceVault = () => {
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-primary)', borderRadius: '6px' }}>
                     <div>
                       <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{doc.documentType}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Expires: {doc.expiryDate ? new Date(doc.expiryDate).toLocaleDateString() : 'N/A'}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('ev.expires', 'Expires:')} {doc.expiryDate ? new Date(doc.expiryDate).toLocaleDateString() : 'N/A'}</div>
                     </div>
                     {getStatusBadge(doc.status)}
                   </div>
@@ -407,17 +406,17 @@ const EvidenceVault = () => {
 
           {/* All Required Documents Table */}
           <div className="card">
-            <h3 style={{ marginBottom: '16px' }}>All Required Documents</h3>
+            <h3 style={{ marginBottom: '16px' }}>{t('ev.allRequiredDocs', 'All Required Documents')}</h3>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Document</th>
-                    <th>Obligation</th>
-                    <th>Status</th>
-                    <th>Verification</th>
-                    <th>Expiry</th>
-                    <th>Action</th>
+                    <th>{t('ev.document', 'Document')}</th>
+                    <th>{t("obl.obligation", "Obligation")}</th>
+                    <th>{t('ev.status', 'Status')}</th>
+                    <th>{t('ev.verification', 'Verification')}</th>
+                    <th>{t('ev.expiry', 'Expiry')}</th>
+                    <th>{t('ev.action', 'Action')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -436,15 +435,15 @@ const EvidenceVault = () => {
                           <button className="btn btn-accent btn-sm" onClick={() => openUpload({ obligationCode: doc.obligationCode, documentType: doc.documentType, documentName: doc.documentType })}>{t('ui.upload')}</button>
                         ) : (
                           <div style={{ display: 'flex', gap: '6px' }}>
-                            {doc.evidenceId && <button className="btn btn-outline btn-sm" onClick={() => handleViewFile(doc.evidenceId, doc.documentType)}>View</button>}
-                            {doc.evidenceId && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(doc.evidenceId)}>Delete</button>}
+                            {doc.evidenceId && <button className="btn btn-outline btn-sm" onClick={() => handleViewFile(doc.evidenceId, doc.documentType)}>{t("ui.view", "View")}</button>}
+                            {doc.evidenceId && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(doc.evidenceId)}>{t("ui.delete", "Delete")}</button>}
                           </div>
                         )}
                       </td>
                     </tr>
                   ))}
                   {requiredDocs.length === 0 && (
-                    <tr><td colSpan={6} className="empty-state">No required documents. Complete your profile to see obligations.</td></tr>
+                    <tr><td colSpan={6} className="empty-state">{t('ev.noRequiredDocs', 'No required documents. Complete your profile to see obligations.')}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -499,13 +498,13 @@ const EvidenceVault = () => {
                         <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(ev.createdAt).toLocaleDateString()}</td>
                         <td>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            <button className="btn btn-outline btn-sm" onClick={() => setSelectedDoc(ev)}>Details</button>
-                            <button className="btn btn-outline btn-sm" onClick={() => handleViewFile(ev._id, ev.originalFileName || ev.documentName)}>File</button>
-                            <button className="btn btn-outline btn-sm" onClick={() => handleAnalyze(ev._id)}>Analyze</button>
+                            <button className="btn btn-outline btn-sm" onClick={() => setSelectedDoc(ev)}>{t('ev.details', 'Details')}</button>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleViewFile(ev._id, ev.originalFileName || ev.documentName)}>{t('ev.file', 'File')}</button>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleAnalyze(ev._id)}>{t('ev.analyze', 'Analyze')}</button>
                             {canReview && ['PENDING', 'UNVERIFIED', 'UNDER_REVIEW'].includes(ev.verificationStatus) && (
-                              <button className="btn btn-sm" style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.3)' }} onClick={() => handleVerify(ev._id, 'VERIFIED')}>Verify</button>
+                              <button className="btn btn-sm" style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.3)' }} onClick={() => handleVerify(ev._id, 'VERIFIED')}>{t('ev.verify', 'Verify')}</button>
                             )}
-                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(ev._id)}>Delete</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(ev._id)}>{t("ui.delete", "Delete")}</button>
                           </div>
                         </td>
                       </tr>
@@ -522,7 +521,7 @@ const EvidenceVault = () => {
           <div className="drawer-overlay" onClick={() => setShowUpload(false)} />
           <div className="drawer">
             <div className="drawer-header">
-              <h2 style={{ fontSize: '1.25rem' }}>Upload Evidence Document</h2>
+              <h2 style={{ fontSize: '1.25rem' }}>{t('ev.uploadDoc', 'Upload Evidence Document')}</h2>
               <button className="drawer-close" onClick={() => setShowUpload(false)}>✕</button>
             </div>
 
@@ -530,18 +529,18 @@ const EvidenceVault = () => {
 
             <form onSubmit={handleUpload} style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
               <div className="form-group">
-                <label className="form-label">Obligation *</label>
+                <label className="form-label">{t('ev.obligationLbl', 'Obligation *')}</label>
                 <select className="form-input" value={uploadForm.obligationCode} onChange={e => setUploadForm({ ...uploadForm, obligationCode: e.target.value, documentType: '', documentName: '' })}>
-                  <option value="">Select obligation...</option>
+                  <option value="">{t('ev.selectObligation', 'Select obligation...')}</option>
                   {obligations.map((o: any) => <option key={o.code} value={o.code}>{o.code} — {o.title}</option>)}
                 </select>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Document Type *</label>
+                <label className="form-label">{t('ev.docTypeLbl', 'Document Type *')}</label>
                 {availableDocTypes.length > 0 ? (
                   <select className="form-input" value={uploadForm.documentType} onChange={e => setUploadForm({ ...uploadForm, documentType: e.target.value, documentName: e.target.value })}>
-                    <option value="">Select type...</option>
+                    <option value="">{t('ev.selectType', 'Select type...')}</option>
                     {availableDocTypes.map((dt: string) => <option key={dt} value={dt}>{dt}</option>)}
                   </select>
                 ) : (
@@ -550,33 +549,33 @@ const EvidenceVault = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Document Name *</label>
+                <label className="form-label">{t('ev.docNameLbl', 'Document Name *')}</label>
                 <input className="form-input" placeholder="e.g. FSSAI License 2025-26" value={uploadForm.documentName} onChange={e => setUploadForm({ ...uploadForm, documentName: e.target.value })} />
               </div>
 
               <div className="form-group">
-                <label className="form-label">File (PDF, JPG, PNG — max 10MB) *</label>
+                <label className="form-label">{t('ev.fileLbl', 'File (PDF, JPG, PNG — max 10MB) *')}</label>
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="form-input" style={{ padding: '8px' }} onChange={e => setUploadForm({ ...uploadForm, file: e.target.files?.[0] || null })} />
               </div>
 
               <div className="grid-2">
                 <div className="form-group">
-                  <label className="form-label">Issue Date</label>
+                  <label className="form-label">{t('ev.issueDate', 'Issue Date')}</label>
                   <input type="date" className="form-input" value={uploadForm.issueDate} onChange={e => setUploadForm({ ...uploadForm, issueDate: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Expiry Date</label>
+                  <label className="form-label">{t('ev.expiryDate', 'Expiry Date')}</label>
                   <input type="date" className="form-input" value={uploadForm.expiryDate} onChange={e => setUploadForm({ ...uploadForm, expiryDate: e.target.value })} />
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Notes</label>
+                <label className="form-label">{t('ev.notes', 'Notes')}</label>
                 <input className="form-input" placeholder="Optional notes..." value={uploadForm.notes} onChange={e => setUploadForm({ ...uploadForm, notes: e.target.value })} />
               </div>
 
               <button type="submit" className="btn btn-accent" style={{ width: '100%', marginTop: '8px' }} disabled={uploadLoading}>
-                {uploadLoading ? 'Uploading...' : 'Upload Document'}
+                {uploadLoading ? t('ev.uploading', 'Uploading...') : t('ev.uploadDoc', 'Upload Document')}
               </button>
             </form>
           </div>
@@ -592,7 +591,7 @@ const EvidenceVault = () => {
               <div>
                 <h2 style={{ fontSize: '1.25rem', marginBottom: '4px' }}>{selectedDoc.documentName}</h2>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Processing Status: 
+                  {t('ev.processingStatus', 'Processing Status:')} 
                   <span style={{ fontWeight: 600, marginLeft: '6px', color: selectedDoc.processingStatus === 'FAILED' ? 'var(--danger)' : selectedDoc.processingStatus === 'OCR_NOT_CONFIGURED' ? 'var(--warning)' : 'var(--text-primary)' }}>
                     {selectedDoc.processingStatus || 'UPLOADED'}
                   </span>
@@ -603,10 +602,10 @@ const EvidenceVault = () => {
 
             <div style={{ padding: '24px' }}>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => handleViewFile(selectedDoc._id)}>View File</button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => handleViewFile(selectedDoc._id)}>{t('obl.viewFile', 'View File')}</button>
                 
                 {(user?.role === 'ACCOUNTANT' || user?.role === 'OWNER') && ['PENDING', 'UNVERIFIED', 'REJECTED'].includes(selectedDoc.verificationStatus) && (
-                  <button className="btn btn-accent" style={{ flex: 1 }} onClick={() => handleVerify(selectedDoc._id, 'UNDER_REVIEW')}>Submit for Review</button>
+                  <button className="btn btn-accent" style={{ flex: 1 }} onClick={() => handleVerify(selectedDoc._id, 'UNDER_REVIEW')}>{t('ev.submitReview', 'Submit for Review')}</button>
                 )}
                 
                 {(user?.role === 'COMPLIANCE_OFFICER' || user?.role === 'OWNER') && selectedDoc.verificationStatus === 'UNDER_REVIEW' && (
@@ -634,14 +633,14 @@ const EvidenceVault = () => {
 
               {/* Classification Info */}
               <div className="card" style={{ marginBottom: '24px', padding: '16px' }}>
-                <div className="card-title micro">Classification</div>
+                <div className="card-title micro">{t('ev.classification', 'Classification')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Type Detected</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('ev.typeDetected', 'Type Detected')}</div>
                     <div style={{ fontWeight: 500 }}>{selectedDoc.classification?.documentType || 'N/A'}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Confidence</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('ev.confidence', 'Confidence')}</div>
                     <div style={{ fontWeight: 500 }}>{selectedDoc.classification?.confidence ? `${(selectedDoc.classification.confidence * 100).toFixed(0)}%` : 'N/A'}</div>
                   </div>
                 </div>
@@ -650,7 +649,7 @@ const EvidenceVault = () => {
               {/* Missing Info Warning */}
               {selectedDoc.missingInformation && selectedDoc.missingInformation.length > 0 && (
                 <div className="card" style={{ marginBottom: '24px', padding: '16px', borderLeft: '3px solid var(--warning)', background: 'var(--bg-primary)' }}>
-                  <div style={{ color: 'var(--warning)', fontWeight: 600, marginBottom: '8px' }}>Missing Information</div>
+                  <div style={{ color: 'var(--warning)', fontWeight: 600, marginBottom: '8px' }}>{t('ev.missingInfo', 'Missing Information')}</div>
                   <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                     {selectedDoc.missingInformation.map((m: string, i: number) => <li key={i}>{m}</li>)}
                   </ul>
@@ -659,25 +658,25 @@ const EvidenceVault = () => {
 
               {/* Extracted Fields / Corrections */}
               <div className="card" style={{ padding: '16px' }}>
-                <div className="card-title micro" style={{ marginBottom: '16px' }}>Extracted Metadata & Correction</div>
+                <div className="card-title micro" style={{ marginBottom: '16px' }}>{t('ev.extractedMeta', 'Extracted Metadata & Correction')}</div>
                 {selectedDoc.extractedFields && selectedDoc.extractedFields.length > 0 ? (
                   <form onSubmit={handleCorrectionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {selectedDoc.extractedFields.map((field: any, i: number) => (
                       <div key={i} className="form-group" style={{ margin: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <label className="form-label" style={{ margin: 0 }}>{field.field}</label>
-                          {field.correctedValue && <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>Corrected</span>}
+                          {field.correctedValue && <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>{t('ev.corrected', 'Corrected')}</span>}
                         </div>
                         <input 
                           name={field.field}
                           className="form-input" 
                           defaultValue={field.correctedValue || field.value || ''} 
-                          placeholder={`Extracted: ${field.value || 'None'}`}
+                          placeholder={`${t('ev.extracted', 'Extracted:')} ${field.value || 'None'}`}
                         />
                       </div>
                     ))}
                     <button type="submit" className="btn btn-outline" disabled={correctionLoading} style={{ marginTop: '8px' }}>
-                      {correctionLoading ? 'Saving...' : 'Save Corrections'}
+                      {correctionLoading ? t('ev.saving', 'Saving...') : t('ev.saveCorrections', 'Save Corrections')}
                     </button>
                   </form>
                 ) : (

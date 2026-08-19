@@ -11,10 +11,10 @@
 // expiry period, a document type, or a legal conclusion. Expiry is derived ONLY
 // from a date that is already stored on the evidence record (entered by a user
 // or read out of the document itself). Requirements are derived ONLY from
-// requiredEvidence already present in the GAWK-derived ComplianceRule /
+// requiredEvidence already present in the Suraksha Rules-derived ComplianceRule /
 // ComplianceAction records.
 
-const INSUFFICIENT_DATA = 'INSUFFICIENT_DATA — Not available in the GAWK ruleset.';
+const INSUFFICIENT_DATA = 'INSUFFICIENT_DATA — Not available in the Suraksha Rules engine.';
 
 // Warning window for an approaching expiry date. This is a UI/reminder window,
 // not a regulatory renewal period, and it matches the window already used by
@@ -85,10 +85,10 @@ function satisfiesRequirement(state) {
 }
 
 /**
- * Builds the GAWK traceability chain for a piece of evidence or a requirement:
- *   Evidence -> Obligation -> Compliance Rule -> Regulatory Source -> GAWK reference
+ * Builds the Suraksha Rules traceability chain for a piece of evidence or a requirement:
+ *   Evidence -> Obligation -> Compliance Rule -> Regulatory Source -> Suraksha Rules reference
  *
- * Any link that is not present in the stored GAWK-derived records is reported as
+ * Any link that is not present in the stored Suraksha Rules-derived records is reported as
  * the exact INSUFFICIENT_DATA sentence. External legal knowledge is never used
  * to fill a gap.
  *
@@ -120,10 +120,10 @@ function buildTraceability({ rule, obligation, obligationCode } = {}) {
     authority: authority || INSUFFICIENT_DATA,
     officialUrl: officialUrl || null,
     sourceVerificationStatus: verificationStatus || INSUFFICIENT_DATA,
-    // The regulatory basis for every rule in this deployment is the GAWK
+    // The regulatory basis for every rule in this deployment is the Suraksha Rules
     // reference document. We report the chain, we never assert a legal outcome.
-    gawkReference: complete
-      ? `GAWK ruleset — ${code}${section ? ` (${section})` : ''}`
+    surakshaRulesReference: complete
+      ? `Suraksha Rules engine — ${code}${section ? ` (${section})` : ''}`
       : INSUFFICIENT_DATA,
     traceabilityComplete: complete
   };

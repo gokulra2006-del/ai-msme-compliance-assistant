@@ -25,10 +25,25 @@ const API = 'http://localhost:5000/api';
  * pastes.
  */
 const EXAMPLE_IMPORT = [
-  'GSTIN: 27AAACR5055K1Z5',
-  'State: Maharashtra',
-  'Industry: Food Processing',
-  'Annual Turnover: 5-50Cr'
+  'Business Name: Sakthi Textiles Pvt. Ltd.',
+  'Entity Type: Private Limited',
+  'GSTIN: 33AACCS1234E1Z1',
+  'State: Tamil Nadu',
+  'City: Coimbatore',
+  'Municipality: Coimbatore Municipal Corporation',
+  'Industry: Manufacturing',
+  'Sub-Industry: Spinning, Weaving and Finishing of Textiles',
+  'Annual Turnover: 5-50Cr',
+  'Total Workers: 85',
+  'On-Roll Workers: 45',
+  'Contract Workers: 40',
+  'Women Workers: 35',
+  'Night Shift Operations: Yes',
+  'Uses Steam Boiler: Yes',
+  'Generates Effluent: Yes',
+  'Hazardous Waste: No',
+  'Export Activity: Yes',
+  'Import Activity: Yes'
 ].join('\n');
 
 /**

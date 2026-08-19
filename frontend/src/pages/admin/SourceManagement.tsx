@@ -61,7 +61,7 @@ export default function SourceManagement() {
 
       <div className="grid grid-cols-1 gap-4">
         {loading ? (
-           <div className="p-8 text-center text-gray-400 bg-gray-800 rounded-xl border border-gray-700">Loading...</div>
+           <div className="p-8 text-center text-gray-400 bg-gray-800 rounded-xl border border-gray-700">{t("ui.loading", "Loading...")}</div>
         ) : sources.length === 0 ? (
            <div className="p-8 text-center text-gray-400 bg-gray-800 rounded-xl border border-gray-700">No sources found.</div>
         ) : (

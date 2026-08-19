@@ -29,6 +29,18 @@ const DRAFT_TEMPLATES = [
     label: 'Document submission cover letter',
     description: 'A generic cover-letter draft for human review; it is not an acknowledgement or submission.',
     requiredFields: ['ownerName', 'entityType', 'state']
+  },
+  {
+    key: 'WAGE_REGISTER_DRAFT',
+    label: 'Wage register draft',
+    description: 'An internal draft format for tracking wage details. Requires human verification.',
+    requiredFields: ['ownerName', 'totalWorkers', 'contractWorkers']
+  },
+  {
+    key: 'EMPLOYEE_DETAILS_FORM',
+    label: 'Employee details form',
+    description: 'An internal draft form for collating basic employee compliance data.',
+    requiredFields: ['ownerName', 'totalWorkers', 'contractWorkers']
   }
 ];
 
@@ -73,7 +85,7 @@ async function getPreparationSnapshot({ business, user, obligationCode }) {
 
   // The evidence checklist is read from the shared Evidence Intelligence service
   // so Document Preparation reports exactly the same status as the Evidence
-  // Vault. Requirements come only from the GAWK-derived rule/action records.
+  // Vault. Requirements come only from the Suraksha Rules-derived rule/action records.
   const [action, evidenceStatus] = await Promise.all([
     ComplianceAction.findOne({ business: business._id, ruleCode: obligationCode }).lean(),
     EvidenceIntelligence.getObligationEvidenceStatus({ business, obligationCode })
@@ -191,6 +203,18 @@ function buildDraftContent({ template, snapshot }) {
       '2. List only documents that are actually enclosed.',
       '3. Obtain authorised sign-off before any external use.'
     );
+  } else if (template.key === 'WAGE_REGISTER_DRAFT') {
+    shared.push(
+      '1. Verify all worker counts and wage entries against official payroll records.',
+      '2. This draft does not replace official statutory registers required by law.',
+      '3. Obtain authorised sign-off before filing or inspection.'
+    );
+  } else if (template.key === 'EMPLOYEE_DETAILS_FORM') {
+    shared.push(
+      '1. Ensure employee privacy and data protection policies are followed.',
+      '2. Verify personal details against official onboarding documents.',
+      '3. Update this record regularly as employee counts change.'
+    );
   } else {
     shared.push(
       '1. Confirm every factual statement against the source record.',
@@ -206,12 +230,12 @@ function buildDraftContent({ template, snapshot }) {
       `Act: ${rule.regulatorySource.actName || 'MISSING INFORMATION'}`,
       `Rule/Section: ${rule.regulatorySource.sectionNumber || 'MISSING INFORMATION'}`,
       `Authority: ${rule.regulatorySource.authority || 'MISSING INFORMATION'}`,
-      `Source: ${rule.regulatorySource.officialUrl || 'SOURCE INFORMATION UNAVAILABLE IN GAWK.'}`
+      `Source: ${rule.regulatorySource.officialUrl || 'SOURCE INFORMATION UNAVAILABLE IN Suraksha Rules.'}`
     );
   } else {
     shared.push(
       'REGULATORY BASIS',
-      'SOURCE INFORMATION UNAVAILABLE IN GAWK.'
+      'SOURCE INFORMATION UNAVAILABLE IN Suraksha Rules.'
     );
   }
 
