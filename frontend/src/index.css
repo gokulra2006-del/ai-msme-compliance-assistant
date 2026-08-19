@@ -22,31 +22,31 @@
 }
 
 :root {
-  --bg-primary: #f5f8f7;
-  --bg-secondary: #f0f4f2;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
   --bg-elevated: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  --bg-hover: rgba(255, 255, 255, 1);
-  --border: rgba(15, 23, 42, 0.08);
-  --border-subtle: rgba(15, 23, 42, 0.04);
-  --border-focus: #67d6b8;
-  --text-primary: #1a1f36;
-  --text-secondary: #5a6b7d;
-  --text-muted: #8b95a5;
-  --accent: #50c8a8;
-  --accent-light: #3db39f;
-  --accent-dim: rgba(80, 200, 168, 0.1);
-  --success: #3dc7a1;
-  --warning: #f4b454;
-  --danger: #e35a5a;
-  --info: #5da9d7;
-  --color-blue: #6366f1;
-  --color-purple: #a78bfa;
-  --color-teal: #50c8a8;
-  --color-amber: #fbbf24;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-hover: rgba(255, 255, 255, 0.9);
+  --border: rgba(15, 23, 42, 0.06);
+  --border-subtle: rgba(15, 23, 42, 0.03);
+  --border-focus: #3b82f6;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --accent: #10b981;
+  --accent-light: #34d399;
+  --accent-dim: rgba(16, 185, 129, 0.1);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --color-blue: #3b82f6;
+  --color-purple: #8b5cf6;
+  --color-teal: #14b8a6;
+  --color-amber: #f59e0b;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
 }
 
 /* ================================================================
@@ -287,14 +287,16 @@ a:hover { color: var(--accent); text-decoration: none; }
 
 .glass {
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
 }
 .glass-hover:hover {
   background: var(--bg-hover);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* ================================================================
@@ -303,19 +305,19 @@ a:hover { color: var(--accent); text-decoration: none; }
 
 .card {
   background: var(--bg-elevated);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 28px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.025);
   display: flex;
   flex-direction: column;
 }
 
 .card:hover {
-  border-color: rgba(80, 200, 168, 0.2);
-  box-shadow: 0 12px 28px rgba(80, 200, 168, 0.08);
-  transform: translateY(-2px);
+  border-color: var(--border-focus);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
 }
 
 .card-title {
@@ -345,27 +347,34 @@ a:hover { color: var(--accent); text-decoration: none; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1.5px solid;
-  font-weight: 600;
-  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 100px; /* Fully rounded pills for a sleeker look */
+  border: 1px solid;
+  font-weight: 500; /* Slightly lighter weight */
+  font-size: 0.875rem; /* Standardized text-sm */
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  background: var(--bg-elevated);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .dashboard-action-pill svg {
   width: 16px;
   height: 16px;
-  opacity: 0.9;
+  opacity: 0.8;
+  transition: transform 0.2s ease;
 }
 
 .dashboard-action-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.025);
+}
+
+.dashboard-action-pill:hover svg {
+  transform: scale(1.1);
 }
 
 /* Color variants for pills */
@@ -496,58 +505,49 @@ a:hover { color: var(--accent); text-decoration: none; }
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 24px;
-  margin-bottom: 28px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .metric-card {
   text-align: left;
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
-  padding: 28px 24px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1.5px solid var(--border);
+  padding: 20px 24px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
-  min-height: 140px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
 }
 
 .metric-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
-  transition: height 0.3s ease;
+  /* Removed harsh top border gradient for cleaner look */
+  display: none;
 }
 
 .metric-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(80, 200, 168, 0.12);
-  border-color: rgba(80, 200, 168, 0.3);
-}
-
-.metric-card:hover::before {
-  height: 5px;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+  border-color: var(--border-focus);
 }
 
 .metric-value {
   font-family: 'Outfit', sans-serif;
-  font-size: 2.4rem;
-  font-weight: 800;
+  font-size: 2rem;
+  font-weight: 700;
   margin: 8px 0 0 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1.1;
   color: var(--text-primary);
 }
 
 .metric-sub {
-  font-size: 0.85rem;
+  font-size: 0.875rem; /* text-sm */
   color: var(--text-secondary);
   margin-top: auto;
 }
