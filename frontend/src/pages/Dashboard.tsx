@@ -266,30 +266,28 @@ const Dashboard = () => {
                                 displayRiskData.riskLevel === 'MODERATE' ? 'var(--accent-light)' : 
                                 'var(--success)';
             return (
-            <div className="dashboard-risk-shell card mb-24" style={{ 
-              background: displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.04)' : 
-                          displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.04)' : 
-                          'rgba(255,255,255,0.22)',
-              border: `1px solid ${
-                displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.2)' : 
-                displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.2)' : 
-                'var(--border)'
-              }`
+            <div className="dashboard-risk-shell card glass mb-8" style={{
+              background: displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.02)' :
+                          displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.02)' :
+                          'var(--bg-card)',
+              borderColor: displayRiskData.riskLevel === 'CRITICAL' ? 'rgba(239, 68, 68, 0.15)' :
+                           displayRiskData.riskLevel === 'HIGH' ? 'rgba(245, 158, 11, 0.15)' :
+                           'var(--border)'
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
-                <div style={{ textAlign: 'center', paddingRight: '24px', borderRight: '1px solid var(--border)' }}>
-                  <h2 className="card-title micro" style={{ textTransform: 'uppercase' }}>{t('dash.complianceRisk')}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+                <div className="text-center md:border-r border-slate-200/50 md:pr-8 flex flex-col items-center">
+                  <h2 className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-6">{t('dash.complianceRisk')}</h2>
                   
-                  <div className="risk-score-ring" style={{ '--ring-color': strokeColor } as CSSProperties}>
+                  <div className="risk-score-ring mb-6" style={{ '--ring-color': strokeColor, width: '140px', height: '140px' } as CSSProperties}>
                     <svg viewBox="0 0 100 100" aria-label="Compliance risk score">
-                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(15, 23, 42, 0.08)" strokeWidth="6" />
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(15, 23, 42, 0.04)" strokeWidth="8" />
                       <circle
                         cx="50"
                         cy="50"
                         r="42"
                         fill="none"
                         stroke={strokeColor}
-                        strokeWidth="6"
+                        strokeWidth="8"
                         strokeLinecap="round"
                         strokeDasharray={264}
                         strokeDashoffset={264 - (264 * displayRiskData.score) / 100}
@@ -297,46 +295,46 @@ const Dashboard = () => {
                         style={{ transition: 'stroke-dashoffset 1s ease-out' }}
                       />
                     </svg>
-                    <div className="risk-score-value">{displayRiskData.score}%</div>
+                    <div className="risk-score-value text-4xl">{displayRiskData.score}%</div>
                   </div>
-                  <div className={`badge ${getRiskBadgeClass(displayRiskData.riskLevel)}`} style={{ fontSize: '0.9rem', padding: '6px 12px' }}>
+                  <div className={`badge ${getRiskBadgeClass(displayRiskData.riskLevel)} px-3 py-1 text-sm font-semibold`}>
                     {t(`risk.${displayRiskData.riskLevel}`)}
                   </div>
-                  <button className="btn btn-outline btn-sm" style={{ marginTop: '24px', width: '100%' }} onClick={() => setShowRiskBreakdown(true)}>
+                  <button className="btn btn-outline btn-sm mt-6 w-full max-w-[200px]" onClick={() => setShowRiskBreakdown(true)}>
                     {t('ui.viewBreakdown', 'View Breakdown')}
                   </button>
-                  <div style={{ marginTop: '12px', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  <div className="mt-3 text-xs text-slate-400 font-medium">
                     {new Date(displayRiskData.calculatedAt).toLocaleString()}
                   </div>
                 </div>
 
-                <div style={{ paddingRight: '24px', borderRight: '1px solid var(--border)' }}>
-                  <h3 className="card-title micro" style={{ marginBottom: '16px', textTransform: 'uppercase' }}>{t("dash.riskDrivers", "Risk Drivers")}</h3>
+                <div className="md:border-r border-slate-200/50 md:pr-8">
+                  <h3 className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-4">{t("dash.riskDrivers", "Risk Drivers")}</h3>
                   {displayRiskData.riskDrivers && displayRiskData.riskDrivers.length > 0 ? (
-                    <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                    <ul className="list-disc pl-5 text-sm text-slate-700 space-y-2">
                       {displayRiskData.riskDrivers.map((driver: string, idx: number) => (
-                        <li key={idx} style={{ marginBottom: '8px' }}>{driver}</li>
+                        <li key={idx}>{driver}</li>
                       ))}
                     </ul>
                   ) : (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>{t("dash.zeroRiskDrivers", "0 risk drivers.")}</p>
+                    <p className="text-sm text-slate-500 m-0">{t("dash.zeroRiskDrivers", "0 risk drivers.")}</p>
                   )}
                 </div>
 
                 <div>
-                  <h3 className="card-title micro" style={{ marginBottom: '16px', textTransform: 'uppercase' }}>{t("dash.recommendedActions", "Recommended Actions")}</h3>
+                  <h3 className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-4">{t("dash.recommendedActions", "Recommended Actions")}</h3>
                   {displayRiskData.recommendedActions && displayRiskData.recommendedActions.length > 0 ? (
-                    <ol style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                    <ol className="list-decimal pl-5 text-sm text-slate-700 space-y-3">
                       {displayRiskData.recommendedActions.map((action: string, idx: number) => (
-                        <li key={idx} style={{ marginBottom: '12px' }}>
-                          <div style={{ marginBottom: '4px' }}>{action}</div>
-                          <Link to="/calendar" className="btn btn-outline btn-sm" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>{t('ui.review')}</Link>
+                        <li key={idx}>
+                          <div className="mb-2">{action}</div>
+                          <Link to="/calendar" className="btn btn-outline btn-sm px-3 py-1 text-xs">{t('ui.review')}</Link>
                         </li>
                       ))}
                     </ol>
                   ) : (
                     <>
-                      <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', margin: '0 0 12px 0' }}>{t("dash.noRiskAction", "No immediate risk-reduction action identified.")}</p>
+                      <p className="text-sm text-slate-700 mb-3">{t("dash.noRiskAction", "No immediate risk-reduction action identified.")}</p>
                       <button className="btn btn-outline btn-sm" onClick={() => setShowRiskBreakdown(true)}>{t('ui.review', 'Review')}</button>
                     </>
                   )}
@@ -347,90 +345,95 @@ const Dashboard = () => {
           })()}
 
           {/* 3. Key Compliance Metrics */}
-          <div className="metrics-row mb-24">
+          <div className="metrics-row mb-8">
             {user?.role !== 'ACCOUNTANT' && (
               <div className="card metric-card">
-                <div className="card-title micro">{t('dash.applicableObligations')}</div>
-                <div className="metric-value">{data?.applies || 0}</div>
+                <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{t('dash.applicableObligations')}</div>
+                <div className="metric-value text-slate-800">{data?.applies || 0}</div>
               </div>
             )}
             {user?.role !== 'ACCOUNTANT' && (
-              <div className="card metric-card" style={{ borderColor: data?.riskBreakdown?.critical > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-                <div className="card-title micro">{t('dash.criticalObligations')}</div>
-                <div className="metric-value" style={{ color: data?.riskBreakdown?.critical > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.riskBreakdown?.critical || 0}</div>
+              <div className={`card metric-card ${data?.riskBreakdown?.critical > 0 ? 'border-red-200 bg-red-50/30' : ''}`}>
+                <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{t('dash.criticalObligations')}</div>
+                <div className={`metric-value ${data?.riskBreakdown?.critical > 0 ? 'text-red-600' : 'text-slate-800'}`}>{data?.riskBreakdown?.critical || 0}</div>
               </div>
             )}
-            <div className="card metric-card" style={{ borderColor: data?.evidence?.summary?.missing > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{user?.role === 'ACCOUNTANT' ? 'Documents to Upload' : t('dash.missingEvidence')}</div>
-              <div className="metric-value" style={{ color: data?.evidence?.summary?.missing > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.evidence?.summary?.missing || 0}</div>
+            <div className={`card metric-card ${data?.evidence?.summary?.missing > 0 ? 'border-amber-200 bg-amber-50/30' : ''}`}>
+              <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{user?.role === 'ACCOUNTANT' ? 'Documents to Upload' : t('dash.missingEvidence')}</div>
+              <div className={`metric-value ${data?.evidence?.summary?.missing > 0 ? 'text-amber-600' : 'text-slate-800'}`}>{data?.evidence?.summary?.missing || 0}</div>
             </div>
             {user?.role !== 'ACCOUNTANT' && (
               <div className="card metric-card">
-                <div className="card-title micro">{t('dash.expiringEvidence')}</div>
-                <div className="metric-value">{data?.evidence?.summary?.expiringSoon || 0}</div>
+                <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{t('dash.expiringEvidence')}</div>
+                <div className="metric-value text-slate-800">{data?.evidence?.summary?.expiringSoon || 0}</div>
               </div>
             )}
-            <div className="card metric-card" style={{ borderColor: data?.calendar?.overdue > 0 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{user?.role === 'ACCOUNTANT' ? 'My Overdue Tasks' : t('dash.overdueActions')}</div>
-              <div className="metric-value" style={{ color: data?.calendar?.overdue > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{data?.calendar?.overdue || 0}</div>
+            <div className={`card metric-card ${data?.calendar?.overdue > 0 ? 'border-red-200 bg-red-50/30' : ''}`}>
+              <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{user?.role === 'ACCOUNTANT' ? 'My Overdue Tasks' : t('dash.overdueActions')}</div>
+              <div className={`metric-value ${data?.calendar?.overdue > 0 ? 'text-red-600' : 'text-slate-800'}`}>{data?.calendar?.overdue || 0}</div>
             </div>
             <div className="card metric-card">
-              <div className="card-title micro">{user?.role === 'ACCOUNTANT' ? 'My Due Soon' : t('dash.dueSoon')}</div>
-              <div className="metric-value">{data?.calendar?.dueSoon || 0}</div>
+              <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{user?.role === 'ACCOUNTANT' ? 'My Due Soon' : t('dash.dueSoon')}</div>
+              <div className="metric-value text-slate-800">{data?.calendar?.dueSoon || 0}</div>
             </div>
-            <div className="card metric-card" style={{ borderColor: data?.calendar?.completed > 0 ? 'rgba(34, 197, 94, 0.3)' : 'var(--border)' }}>
-              <div className="card-title micro">{t('dash.completedActions')}</div>
-              <div className="metric-value" style={{ color: 'var(--success)' }}>{data?.calendar?.completed || 0}</div>
+            <div className={`card metric-card ${data?.calendar?.completed > 0 ? 'border-emerald-200 bg-emerald-50/30' : ''}`}>
+              <div className="text-xs font-semibold text-slate-500 tracking-wider uppercase mb-1">{t('dash.completedActions')}</div>
+              <div className="metric-value text-emerald-600">{data?.calendar?.completed || 0}</div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* 4. Critical Issues */}
-            <div className="card" style={{ border: topCriticalIssues.length > 0 ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border)' }}>
-              <h2 className="card-title" style={{ color: topCriticalIssues.length > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>{t('dash.requiresAttention')}</h2>
+            <div className={`card ${topCriticalIssues.length > 0 ? 'border-red-200/60 shadow-sm' : ''}`}>
+              <h2 className={`text-base font-semibold mb-4 ${topCriticalIssues.length > 0 ? 'text-red-600' : 'text-slate-800'}`}>{t('dash.requiresAttention')}</h2>
               {topCriticalIssues.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="flex flex-col gap-3">
                   {topCriticalIssues.map((issue: any, i: number) => (
-                    <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: '3px solid var(--danger)' }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>{issue.title}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                        <span style={{ color: 'var(--danger)' }}>{issue.status}</span> • {t(`risk.${issue.priority}`) || issue.priority}
+                    <div key={i} className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div>
+                        <div className="font-semibold text-sm text-slate-800 mb-1">{issue.title}</div>
+                        <div className="text-xs text-slate-500 flex items-center gap-2">
+                          <span className="text-red-600 font-medium">{issue.status}</span>
+                          <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                          {t(`risk.${issue.priority}`) || issue.priority}
+                        </div>
                       </div>
-                      <Link to={issue.link} className="btn btn-outline btn-sm">{t('ui.review')}</Link>
+                      <Link to={issue.link} className="btn btn-outline btn-sm px-3 py-1.5 text-xs">{t('ui.review')}</Link>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>{t('empty.noIssues')}</div>
+                <div className="empty-state py-8">{t('empty.noIssues')}</div>
               )}
             </div>
 
             {/* 5. Upcoming Deadlines */}
             <div className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 className="card-title" style={{ margin: 0 }}>{t('dash.upcomingCompliance')}</h2>
-                <Link to="/calendar" className="btn btn-outline btn-sm">{t('ui.viewCalendar')}</Link>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-base font-semibold text-slate-800 m-0">{t('dash.upcomingCompliance')}</h2>
+                <Link to="/calendar" className="btn btn-outline btn-sm px-3 py-1.5 text-xs">{t('ui.viewCalendar')}</Link>
               </div>
               {data?.calendar?.upcoming && data.calendar.upcoming.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="flex flex-col gap-3">
                   {data.calendar.upcoming.map((action: any, i: number) => {
                     const daysRemaining = action.dueDate ? Math.ceil((new Date(action.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
+                    const isOverdue = action.status === 'OVERDUE';
                     return (
-                      <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: action.status === 'OVERDUE' ? '3px solid var(--danger)' : '3px solid var(--accent-light)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div key={i} className={`p-3 bg-slate-50/50 rounded-xl border ${isOverdue ? 'border-red-200' : 'border-slate-100'} hover:bg-slate-50 transition-colors`}>
+                        <div className="flex justify-between items-start">
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{action.title}</div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{action.ruleCode}</div>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                              {action.dueDate ? `In ${daysRemaining} days` : `Frequency: ${action.frequency}`}
+                            <div className="font-semibold text-sm text-slate-800 mb-1">{action.title}</div>
+                            <div className="text-xs text-slate-400 mb-1 font-mono">{action.ruleCode}</div>
+                            <div className="text-xs text-slate-500">
+                              {action.dueDate ? <span className={isOverdue ? 'text-red-600 font-medium' : ''}>In {daysRemaining} days</span> : `Frequency: ${action.frequency}`}
                             </div>
                             {action._id && (
-                              <Link to={`/submissions/${action._id}`} className="btn btn-primary btn-sm" style={{ marginTop: '12px', padding: '4px 12px', fontSize: '0.8rem' }}>{t("dash.viewSubmission", "View Submission")}</Link>
+                              <Link to={`/submissions/${action._id}`} className="inline-block mt-2 text-xs font-medium text-blue-600 hover:text-blue-700">{t("dash.viewSubmission", "View Submission")} &rarr;</Link>
                             )}
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                          <div className="flex flex-col items-end gap-2">
                             {getSeverityBadge(action.priority)}
-                            <span style={{ fontSize: '0.75rem', color: action.status === 'OVERDUE' ? 'var(--danger)' : 'var(--text-muted)' }}>{t(`status.${action.status}`) || action.status}</span>
+                            <span className={`text-xs font-medium ${isOverdue ? 'text-red-600' : 'text-slate-400'}`}>{t(`status.${action.status}`) || action.status}</span>
                           </div>
                         </div>
                       </div>
@@ -438,138 +441,149 @@ const Dashboard = () => {
                   })}
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>{t('empty.noDeadlines')}</div>
+                <div className="empty-state py-8">{t('empty.noDeadlines')}</div>
               )}
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             {/* 6. Evidence Gaps */}
             <div className="card">
-              <h2 className="card-title">{t('dash.evidenceGaps')}</h2>
+              <h2 className="text-base font-semibold text-slate-800 mb-4">{t('dash.evidenceGaps')}</h2>
               {missingEvidences.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="flex flex-col gap-3">
                   {missingEvidences.slice(0, 5).map((doc: any, i: number) => (
-                    <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', borderLeft: '3px solid var(--warning)' }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>{doc.documentType}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                        Status: <span style={{ color: doc.status === 'MISSING' ? 'var(--danger)' : 'var(--warning)' }}>{t(`status.${doc.status}`) || doc.status}</span>
+                    <div key={i} className="p-3 bg-amber-50/30 rounded-xl border border-amber-100 flex items-center justify-between hover:bg-amber-50/50 transition-colors">
+                      <div>
+                        <div className="font-semibold text-sm text-slate-800 mb-1">{doc.documentType}</div>
+                        <div className="text-xs text-slate-500">
+                          Status: <span className={`font-medium ${doc.status === 'MISSING' ? 'text-red-600' : 'text-amber-600'}`}>{t(`status.${doc.status}`) || doc.status}</span>
+                        </div>
                       </div>
-                      <Link to="/evidence" className="btn btn-outline btn-sm">{doc.status === 'MISSING' ? t('ui.upload') : t('ui.review')}</Link>
+                      <Link to="/evidence" className="btn btn-outline btn-sm px-3 py-1.5 text-xs">{doc.status === 'MISSING' ? t('ui.upload') : t('ui.review')}</Link>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>{t('empty.noGaps')}</div>
+                <div className="empty-state py-8">{t('empty.noGaps')}</div>
               )}
             </div>
 
             {/* 8. Compliance Progress */}
             <div className="card">
-              <h2 className="card-title">{t('dash.complianceProgress')}</h2>
+              <h2 className="text-base font-semibold text-slate-800 mb-4">{t('dash.complianceProgress')}</h2>
               {data?.calendar?.totalApplicable > 0 ? (
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
+                  <div className="flex justify-between items-end mb-4">
+                    <div className="text-sm font-medium text-slate-500">
                       {data.calendar.completed} / {data.calendar.totalApplicable} actions completed
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--accent-light)' }}>
+                    <div className="text-3xl font-bold text-emerald-500 tracking-tight">
                       {Math.round((data.calendar.completed / data.calendar.totalApplicable) * 100)}%
                     </div>
                   </div>
                   
                   {/* Progress Bar */}
-                  <div style={{ width: '100%', height: '12px', background: 'var(--bg-elevated)', borderRadius: '6px', overflow: 'hidden', display: 'flex', marginBottom: '24px' }}>
-                    <div style={{ width: `${(data.calendar.completed / data.calendar.totalApplicable) * 100}%`, background: 'var(--success)', height: '100%' }} />
-                    <div style={{ width: `${(data.calendar.overdue / data.calendar.totalApplicable) * 100}%`, background: 'var(--danger)', height: '100%' }} />
-                    <div style={{ width: `${(data.calendar.pending / data.calendar.totalApplicable) * 100}%`, background: 'var(--warning)', height: '100%' }} />
+                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex mb-6 shadow-inner">
+                    <div style={{ width: `${(data.calendar.completed / data.calendar.totalApplicable) * 100}%` }} className="bg-emerald-500 h-full" />
+                    <div style={{ width: `${(data.calendar.overdue / data.calendar.totalApplicable) * 100}%` }} className="bg-red-500 h-full" />
+                    <div style={{ width: `${(data.calendar.pending / data.calendar.totalApplicable) * 100}%` }} className="bg-amber-400 h-full" />
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{t('status.COMPLETED')}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--success)' }}>{data.calendar.completed}</span>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        {t('status.COMPLETED')}
+                      </span>
+                      <span className="font-semibold text-emerald-600">{data.calendar.completed}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{t('status.PENDING')}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--warning)' }}>{data.calendar.pending}</span>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                        {t('status.PENDING')}
+                      </span>
+                      <span className="font-semibold text-amber-600">{data.calendar.pending}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{t('status.OVERDUE')}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--danger)' }}>{data.calendar.overdue}</span>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        {t('status.OVERDUE')}
+                      </span>
+                      <span className="font-semibold text-red-600">{data.calendar.overdue}</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>{t("dash.noApplicableActions", "No applicable compliance actions available yet.")}</div>
+                <div className="empty-state py-8">{t("dash.noApplicableActions", "No applicable compliance actions available yet.")}</div>
               )}
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* 9. Obligation Summary */}
             <div className="card">
-              <h2 className="card-title">{t('dash.obligationSummary')}</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{t('status.APPLIES')}</span>
-                  <span style={{ fontWeight: 600 }}>{data?.applies || 0}</span>
+              <h2 className="text-base font-semibold text-slate-800 mb-4">{t('dash.obligationSummary')}</h2>
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="text-sm font-medium text-slate-600">{t('status.APPLIES')}</span>
+                  <span className="font-bold text-slate-800">{data?.applies || 0}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{t('status.DOES_NOT_APPLY')}</span>
-                  <span style={{ fontWeight: 600 }}>{data?.doesNotApply || 0}</span>
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="text-sm font-medium text-slate-600">{t('status.DOES_NOT_APPLY')}</span>
+                  <span className="font-bold text-slate-800">{data?.doesNotApply || 0}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{t('status.INSUFFICIENT_DATA')}</span>
-                  <span style={{ fontWeight: 600, color: data?.insufficientData > 0 ? 'var(--warning)' : 'inherit' }}>{data?.insufficientData || 0}</span>
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="text-sm font-medium text-slate-600">{t('status.INSUFFICIENT_DATA')}</span>
+                  <span className={`font-bold ${data?.insufficientData > 0 ? 'text-amber-600' : 'text-slate-800'}`}>{data?.insufficientData || 0}</span>
                 </div>
               </div>
-              <Link to="/obligations" className="btn btn-outline btn-sm" style={{ marginTop: '16px', width: '100%' }}>{t('nav.obligations').replace('📋 ', '')}</Link>
+              <Link to="/obligations" className="btn btn-outline btn-sm mt-4 w-full justify-center">{t('nav.obligations').replace('📋 ', '')}</Link>
             </div>
 
             {/* 11. Recent Activity */}
             <div className="card">
-              <h2 className="card-title">{t('dash.recentActivity')}</h2>
+              <h2 className="text-base font-semibold text-slate-800 mb-4">{t('dash.recentActivity')}</h2>
               {data?.activity && data.activity.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="flex flex-col gap-4">
                   {data.activity.slice(0, 4).map((log: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-light)', marginTop: '6px' }} />
+                    <div key={i} className="flex gap-3 items-start relative before:absolute before:left-[5px] before:top-[14px] before:bottom-[-20px] before:w-[2px] before:bg-slate-100 last:before:hidden">
+                      <div className="w-3 h-3 rounded-full bg-emerald-400 mt-1.5 relative z-10 border-2 border-white shadow-sm" />
                       <div>
-                        <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{log.action.replace(/_/g, ' ')}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleString()}</div>
+                        <div className="text-sm font-medium text-slate-800 leading-tight mb-1">{log.action.replace(/_/g, ' ')}</div>
+                        <div className="text-xs text-slate-400 font-medium">{new Date(log.createdAt).toLocaleString()}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>{t('empty.noActivity')}</div>
+                <div className="empty-state py-8">{t('empty.noActivity')}</div>
               )}
             </div>
 
             {/* 12. Risk Trend */}
             <div className="card">
-              <h2 className="card-title">{t('dash.riskTrend')}</h2>
+              <h2 className="text-base font-semibold text-slate-800 mb-4">{t('dash.riskTrend')}</h2>
               {data?.history && data.history.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="flex flex-col gap-1">
                   {data.history.map((hist: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <div key={i} className="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0">
+                      <span className="text-sm font-medium text-slate-500">
                         {new Date(hist.calculatedAt).toLocaleDateString()}
                       </span>
-                      <span style={{ fontWeight: 600, color: 
-                        hist.riskLevel === 'CRITICAL' ? 'var(--danger)' : 
-                        hist.riskLevel === 'HIGH' ? 'var(--warning)' : 
-                        hist.riskLevel === 'MODERATE' ? 'var(--accent-light)' : 
-                        'var(--success)'
-                      }}>
-                        {hist.score} ({t(`risk.${hist.riskLevel}`)})
+                      <span className={`text-sm font-bold ${
+                        hist.riskLevel === 'CRITICAL' ? 'text-red-600' :
+                        hist.riskLevel === 'HIGH' ? 'text-amber-600' :
+                        hist.riskLevel === 'MODERATE' ? 'text-blue-600' :
+                        'text-emerald-600'
+                      }`}>
+                        {hist.score} <span className="font-medium text-xs ml-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">({t(`risk.${hist.riskLevel}`)})</span>
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="empty-state" style={{ padding: '24px 0' }}>{t('empty.noTrend')}</div>
+                <div className="empty-state py-8">{t('empty.noTrend')}</div>
               )}
             </div>
           </div>
